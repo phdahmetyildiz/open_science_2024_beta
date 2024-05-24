@@ -9,7 +9,7 @@ from pip._vendor import cachecontrol
 import google.auth.transport.requests
 
 app = Flask("Google Login App")
-app.secret_key = "CodeSpecialist.com"
+app.secret_key = "Test"
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
