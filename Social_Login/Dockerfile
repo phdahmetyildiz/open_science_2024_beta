@@ -13,4 +13,4 @@ ENV HOST=0.0.0.0
 
 EXPOSE 3000
 
-CMD ["flask", "run"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=3000"]
