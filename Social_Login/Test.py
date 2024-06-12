@@ -49,6 +49,7 @@ def protected_area():
     return jsonify({"message": "Welcome to the protected area"}), 200
 
 if __name__ == "__main__":
+    db.create_all()
     app.run(debug=True)
 
 # Datenbank vorher Initialisieren
