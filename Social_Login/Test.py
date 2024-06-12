@@ -4,7 +4,7 @@ from google.auth.transport import requests as google_requests
 
 app = Flask(__name__)
 
-GOOGLE_CLIENT_ID = "your_google_client_id"
+GOOGLE_CLIENT_ID = "15290909298-a7t7e7e0hngfmcr6lug01qruf3r3b1eh.apps.googleusercontent.com"
 
 @app.route("/login", methods=["POST"])
 def login():
