@@ -52,7 +52,5 @@ if __name__ == "__main__":
     db.create_all()
     app.run(debug=True)
 
-# Datenbank vorher Initialisieren
-# if __name__ == "__main__":
-#    db.create_all()
-#   app.run(debug=True)
+
+#Senden einer POST-Anfrage an https://example.com/login (ersetze example.com durch die tatsächliche Domain oder URL deines Backends)
