@@ -7,7 +7,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-ENV FLASK_APP=test.py
+ENV FLASK_APP=Test.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV HOST=0.0.0.0
 
