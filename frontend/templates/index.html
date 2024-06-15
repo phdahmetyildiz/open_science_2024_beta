@@ -1,0 +1,35 @@
+<!-- templates/index.html -->
+
+{% extends 'base.html' %}
+{% include '/components/header.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 px-2.5 py-4 border border-4">
+  <div class="w-full h-auto bg-gray-300 rounded-xl p-6 m-auto bg-white shadow-md ring-2 ring-gray-800/50">
+    <h1 class="text-3xl font-semibold text-center text-gray-700">Jetzt registrieren</h1>
+    <form class="space-y-4 mt-6">
+      <div>
+        <label class="label">
+          <span class="text-base label-text">Email</span>
+        </label>
+        <input type="text" placeholder="Email Address" class="w-full input input-bordered" />
+      </div>
+      <div>
+        <label class="label">
+          <span class="text-base label-text">Password</span>
+        </label>
+        <input type="password" placeholder="Enter Password" class="w-full input input-bordered" />
+      </div>
+      <a href="#" class="text-xs text-gray-600 hover:underline hover:text-blue-600">Forget Password?</a>
+      <div>
+        <button class="btn-neutral btn btn-block">Login</button>
+      </div>
+    </form>
+  </div>
+  <div class="w-full h-64 bg-gray-300 rounded-xl">
+    <div class="skeleton w-full h-full"></div>
+  </div>
+</div>
+{% endblock %}

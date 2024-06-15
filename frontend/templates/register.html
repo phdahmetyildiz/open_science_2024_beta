@@ -1,0 +1,36 @@
+{% include "/components/header.html" %}
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div id="success-message" hx-target="this"></div>
+<div class="flex justify-center items-center w-full">
+  <div class="w-full max-w-xl p-4 border border-gray-300">
+    <form id="register-form" hx-post="/submit-register" hx-trigger="submit" hx-swap="outerHTML" class="space-y-4">
+      <div>
+        <label class="label">
+          <span class="label-text">Email</span>
+        </label>
+        <input type="email" name="email" placeholder="Email" aria-label="Email" autocomplete="email" required class="w-full input input-bordered" />
+      </div>
+      <div>
+        <label class="label">
+          <span class="label-text">Password</span>
+        </label>
+        <input type="password" name="password" placeholder="Password" aria-label="Password" required class="w-full input input-bordered" />
+      </div>
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" name="placeholder" class="checkbox checkbox-accent" />
+        <span>Lorem Ipsum unchecked</span>
+      </label>
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" name="placeholder" checked class="checkbox checkbox-accent" />
+        <span>Lorem Ipsum checked</span>
+      </label>
+      <hr class="border-gray-200" />
+      <p><a href="/login" class="text-blue-500 hover:underline">Bereits registriert?</a></p>
+      <button type="submit" class="btn btn-neutral w-full">Register</button>
+      <div id="message" class="mt-2"></div>
+    </form>
+  </div>
+</div>
+{% endblock %}
