@@ -1,0 +1,2 @@
+The Data is only meant as a backup, do not use to run the Flask server
+if you want to run / work on the flask server use the flaskserver.py data found under SoftwareProjekt2\Backend\flaskserver.py
