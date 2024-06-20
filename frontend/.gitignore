@@ -1,3 +1,15 @@
 .venv/
-__pycache__/
-node_modules/
+node_modules/ 
+users.json
+users.json
+*.pyc
+users.json
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
