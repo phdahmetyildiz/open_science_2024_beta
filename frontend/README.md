@@ -10,10 +10,12 @@ To make the website dynamic, I use htmx (htmx mentioned), and for the design, I 
 ## Screenshots of the current state
 <details>
   <summary>
-     ![image](https://github.com/phdametyildiz/open_science_2024_beta/assets/135551114/d2b61acc-6ca4-4329-a236-52a44f705332)
 
   </summary>
- PLACEHOLDER
+  ![Login](https://github.com/phdametyildiz/open_science_2024_beta/assets/135551114/1a9ee9eb-8743-4924-a68e-722d0ba132e8)
+  ![article](https://github.com/phdametyildiz/open_science_2024_beta/assets/135551114/07063721-1f89-4c44-8d82-02c6f31eed79)
+  ![profile](https://github.com/phdametyildiz/open_science_2024_beta/assets/135551114/d0b1b1f5-77d3-4e93-82e3-822670730c34)
+
 </details>
 
 # how to use it yourself
