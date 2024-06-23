@@ -4,7 +4,6 @@
 this is currently a university project. it's an open source platform (similar to research gate), where people can write and share their research papers. 
 
 # background of the project
-I'm a backend and software developer with a focus on logic, mainly using Python and Rust (I use Rust, by the way). While I enjoy backend development, frontend development with HTML, CSS, and JavaScript has always been challenging for me.
 
 To make the website dynamic, I use htmx (htmx mentioned), and for the design, I rely on TailwindCSS with the daisyUI plugin. This combination allowed my team and me to create a user-friendly, aesthetically pleasing website, without relying on JavaScript, and with both style and dynamic interaction handled seamlessly.
 
