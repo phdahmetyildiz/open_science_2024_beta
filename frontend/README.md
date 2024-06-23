@@ -10,7 +10,8 @@ To make the website dynamic, I use htmx (htmx mentioned), and for the design, I 
 ## Screenshots of the current state
 <details>
   <summary>
-     main page
+     ![image](https://github.com/phdametyildiz/open_science_2024_beta/assets/135551114/d2b61acc-6ca4-4329-a236-52a44f705332)
+
   </summary>
  PLACEHOLDER
 </details>
