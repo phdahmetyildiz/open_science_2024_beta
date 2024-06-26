@@ -1,4 +1,4 @@
-# **THIS REPOSITORY IS HEAVILY IN CHANGE SO PLEASE DO NOT MIND THE BOILERPLATE**
+# **THIS IS THE README OF THE FRONTEND GROUP**
 
 # about this project
 this is currently a university project. it's an open source platform (similar to research gate), where people can write and share their research papers. 
