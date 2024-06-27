@@ -7,6 +7,7 @@ from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
 import google.auth.transport.requests
 import sqlite3
+import jsonify
 
 # variables needed inside the flask app / methods
 app = Flask("Google Login App")
@@ -117,10 +118,19 @@ def login_is_required(function):
 
 # app routes
 # Database
-@app.route('/add_userdata', methods=['GET'])
+@app.route('/get_articledata', methods=['GET'])
+def get_articledata():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM articledata')
+    articledata = cursor.fetchall()
+    db.close()
+    return jsonify(articledata)
+
+@app.route('/add_userdata', methods=['POST'])
 def add_userdata():
 
-    userdata = session['userdata']
+    userdata = request.json
 
     username = userdata['username']
     email = userdata['email']
@@ -149,9 +159,9 @@ def add_userdata():
     db.commit()
     db.close()
     return jsonify({"message": "User data added successfully"}), 201
-@app.route('/add_articledata', methods=['GET'])
+@app.route('/add_articledata', methods=['POST'])
 def add_articledata():
-    articledata = session['articledata']
+    articledata = request.json
 
     article_name = articledata['article_name']
     description = articledata.get('description', None)
