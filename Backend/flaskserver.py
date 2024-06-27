@@ -117,6 +117,7 @@ def login_is_required(function):
     return wrapper
 
 # app routes
+
 # Database
 @app.route('/get_articledata', methods=['GET'])
 def get_articledata():
@@ -126,7 +127,6 @@ def get_articledata():
     articledata = cursor.fetchall()
     db.close()
     return jsonify(articledata)
-
 @app.route('/add_userdata', methods=['POST'])
 def add_userdata():
 
@@ -275,7 +275,25 @@ def protected_area():
     return f"Hello {session['name']}! <br/> <a href='/logout'><button>Logout</button></a>"
 
 #Articlemanagement
-# (Paste here)
+@app.route('/return_article/<string:keyword>', methods=['GET', 'POST'])
+def return_article():
+        conn = get_db_connection()
+        if conn is not None:
+            try:
+                cursor = conn.execute('''
+                    SELECT * FROM articles WHERE title LIKE ? OR content LIKE ?
+                ''', ('%' + keyword + '%', '%' + keyword + '%'))
+                results = cursor.fetchall()
+                conn.close()
+                if results:
+                    for i, article in enumerate(results, start=1):
+                        jsonify(f"{i}. Titel: {article['title']}, Autor: {article['author']}")
+                else:
+                    jsonify(f"Keine Artikel gefunden mit dem Stichwort '{keyword}'.")
+            except sqlite3.Error as e:
+                jsonify(f"Fehler bei der Artikelsuche: {e}")
+        else:
+            jsonify("Verbindung zur Datenbank konnte nicht hergestellt werden.")
 
 if __name__ == '__main__':
     init_db()
