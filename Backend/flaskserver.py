@@ -234,32 +234,34 @@ def update_articledata():
     db.close()
 
     return jsonify({"message": f"User data with ID {user_id}, field '{row}' updated successfully"}), 200
-@app.route("/login")
+@app.route("/login", methods=["POST"])
 def login():
-    authorization_url, state = flow.authorization_url()
-    session["state"] = state
-    return redirect(authorization_url)
-@app.route("/callback")
-def callback():
-    flow.fetch_token(authorization_response=request.url)
+    token = request.json.get("token")
+    if not token:
+        return jsonify({"error": "Token missing"}), 400
 
-    if not session["state"] == request.args["state"]:
-        abort(500)  # State does not match!
+    try:
+        id_info = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+        google_id = id_info.get("sub")
+        email = id_info.get("email")
+        name = id_info.get("name")
 
-    credentials = flow.credentials
-    request_session = requests.session()
-    cached_session = cachecontrol.CacheControl(request_session)
-    token_request = google.auth.transport.requests.Request(session=cached_session)
+        # Check if user already exists in the database
+        user = UserProfile.query.filter_by(google_id=google_id).first()
+        if user:
+            # Update the user's token
+            user.token = token
+        else:
+            # Create a new user profile
+            user = UserProfile(google_id=google_id, email=email, token=token)
+            db.session.add(user)
 
-    id_info = id_token.verify_oauth2_token(
-        id_token=credentials._id_token,
-        request=token_request,
-        audience=GOOGLE_CLIENT_ID
-    )
+        db.session.commit()
 
-    session["google_id"] = id_info.get("sub")
-    session["name"] = id_info.get("name")
-    return redirect("/protected_area")
+        return jsonify({"google_id": google_id, "email": email, "name": name}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 401
+
 @app.route("/logout")
 def logout():
     session.clear()

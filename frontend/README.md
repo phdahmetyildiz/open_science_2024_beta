@@ -1,25 +1,23 @@
-# **THIS REPOSITORY IS HEAVILY IN CHANGE SO PLEASE DO NOT MIND THE BOILERPLATE**
+# **THIS IS THE README OF THE FRONTEND GROUP**
 
 # about this project
 this is currently a university project. it's an open source platform (similar to research gate), where people can write and share their research papers. 
 
 # background of the project
-I'm a backend and software developer with a focus on logic, mainly using Python and Rust (I use Rust, by the way). While I enjoy backend development, frontend development with HTML, CSS, and JavaScript has always been challenging for me.
-
-I've had several unsuccessful attempts at learning frontend development, mainly because of my difficulties with JavaScript. Modern frontend frameworks like React and Vue are powerful but too complex for my taste. Additionally, I didn't like the idea of relying heavily on the client side for processing and storage.
-
-Even though I have experience with FastAPI and templating, I felt my frontends lacked dynamic features and aesthetic appeal. My ideal frontend should look good, be dynamic, and not take too long to develop.
-
-When I had the chance to explore this area more deeply, I gave it another try. I attempted to work with JavaScript again, but it didn't work out. So, I continued searching for the right tools—and I found them.
 
 To make the website dynamic, I use htmx (htmx mentioned), and for the design, I rely on TailwindCSS with the daisyUI plugin. This combination allowed my team and me to create a user-friendly, aesthetically pleasing website, without relying on JavaScript, and with both style and dynamic interaction handled seamlessly.
 
 ## Screenshots of the current state
+
+  <img src="https://github.com/phdametyildiz/open_science_2024_beta/assets/135551114/1a9ee9eb-8743-4924-a68e-722d0ba132e8" width="300">
+  
+  <img src="https://github.com/phdametyildiz/open_science_2024_beta/assets/135551114/07063721-1f89-4c44-8d82-02c6f31eed79" width="300">
+  
+  <img src="https://github.com/phdametyildiz/open_science_2024_beta/assets/135551114/d0b1b1f5-77d3-4e93-82e3-822670730c34" width="300">
+
+  
+
 <details>
-  <summary>
-     main page
-  </summary>
- PLACEHOLDER
 </details>
 
 # how to use it yourself
