@@ -15,25 +15,45 @@ To make the website dynamic, I use htmx (htmx mentioned), and for the design, I 
   
   <img src="https://github.com/phdametyildiz/open_science_2024_beta/assets/135551114/d0b1b1f5-77d3-4e93-82e3-822670730c34" width="300">
 
-  
+## Inhaltsverzeichnis
 
-<details>
-</details>
+- [Installation](#installation)
+- [Verwendung](#verwendung)
+- [Projektstruktur](#projektstruktur)
+- [Technologien](#technologien)
+- [Mitwirkende](#mitwirkende)
+- [Lizenz](#lizenz)
 
-# how to use it yourself
+## Installation
 
-REQUIREMENTS:
-- python and pip) is installed
+### Voraussetzungen
 
-clone the repo or download it as a zip file
+Stellen Sie sicher, dass die folgenden Softwarekomponenten auf Ihrem System installiert sind:
+
+- Node.js (Version 14 oder höher)
+- npm (Node Package Manager)
+
+### Schritte zur Installation
+
+1. Klonen Sie das Repository:
+    ```bash
+    git clone https://github.com/mur1chan/frontend.git
+    ```
+
+2. Navigieren Sie in das Projektverzeichnis:
+    ```bash
+    cd frontend
+    ```
+
+3. Installieren Sie die Abhängigkeiten:
+    ```bash
+    npm install
+    ```
+
+## Verwendung
+
+### Entwicklung
+
+Starten Sie die Entwicklungsumgebung mit:
 ```bash
-git clone https://github.com/mur1chan/frontend.git
-```
-
-after that open the repository in your code editor or terminal and run the following commands:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-uvicorn app.main:app --reload --host "localhost"
-```
+npm start
