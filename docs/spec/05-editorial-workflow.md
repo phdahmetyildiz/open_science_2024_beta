@@ -4,7 +4,7 @@ The workflow follows the usual journal process, with three differences: editors 
 
 ## 1. Where the workflow runs
 
-All workflow data for a manuscript lives on its **handling node**, which is the node where the corresponding author created it. Editors, reviewers and co-authors from other nodes sign in there with ORCID (03 §10). Notifications reach them through their account nodes (03 §9).
+All workflow data for a manuscript lives on its **handling node**, which is the node where the corresponding author created it. Editors, reviewers and co-authors from other nodes sign in there with ORCID (03 §10). Notifications reach them through their account nodes (03 §9). If the handling node is unavailable, the manuscript waits and its deadlines are extended afterwards (03 §11.5).
 
 ## 2. Fields and editorial boards
 
@@ -214,6 +214,8 @@ A rejected paper whose author opts in is published as a **rejected record**: it 
 | Maximum rounds | 4 | Board |
 
 Overdue steps escalate: first to the actor, then to the editor, then to the board chairs.
+
+If the handling node was unavailable, every running deadline is extended by the length of the outage, rounded up to full days, and everyone affected is notified (03 §11.5).
 
 ## 15. Notifications
 

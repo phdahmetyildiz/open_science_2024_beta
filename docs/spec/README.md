@@ -42,6 +42,8 @@ Requirement keywords **MUST**, **SHOULD** and **MAY** are used as in RFC 2119. R
 | D-12 | Word and LaTeX file import come in **V2**. |
 | D-13 | Node installation and operation must be **easy for a university IT department**. |
 | D-14 | Tech stack: **TypeScript throughout** (NestJS backend, React frontend, Tiptap/CodeMirror/Yjs editors, PostgreSQL), delivered as a Docker Compose stack of three containers. The PDF engine (Typst or HTML-to-PDF) is chosen after Phase-0 spike S1 (see 02 §4.3). |
+| D-15 | The network has a **generic URL** (the *front door*) on a Foundation-owned domain, served by several healthy nodes. Readers are served by whichever node answers. Signed-in users are redirected to their own account node. DOIs resolve to the front door (see 02 §6). |
+| D-16 | Private data survives node failure in two stages. **V1:** encrypted, restore-only copies on 2 partner nodes, which can't read them, and workflow deadlines pause while a handling node is down. **V2:** partner nodes can take over a failed node automatically (see 03 §11). |
 
 ## Assumptions to confirm
 
@@ -57,7 +59,7 @@ These were made by the spec authors to fill gaps. Each one is referenced where i
 | A-06 | A decision needs at least **2 completed reviews** (configurable per board). |
 | A-07 | Title, abstract and keywords are required in English. Full text may be in any language. The UI ships in English and German. |
 | A-08 | Publishing and reading are free (no article processing charges). |
-| A-09 | Unpublished manuscripts live only on the author's node (and its backups); they are never replicated across the network. |
+| A-09 | Unpublished manuscripts live only on their handling node. Outside it, they exist only as encrypted copies that the holder can't read (the node's own backups and its partner copies, D-16). They are never replicated across the network in readable form. |
 | A-10 | Reviewers may leave confidential comments for the editor, limited to ethics and conflict issues. These are never published. |
 | A-11 | One house citation style per field family (numeric or author–year), chosen by the board. |
 | A-12 | Authors can appeal a rejection once, to the board chair of the field. |
@@ -69,7 +71,12 @@ These were made by the spec authors to fill gaps. Each one is referenced where i
 | Network | All admitted nodes together. |
 | Node | One installation of the software, run by a member institution. |
 | Foundation | The legal non-profit entity behind the network (DOI prefix, ISSN, contracts). |
-| Account node | The node where a researcher created their account. Their profile is owned there. |
+| Account node | The node a researcher chose as their home when they first signed in. Their profile, email address and dashboard live there. |
+| Account directory | Network-wide mapping from ORCID iD to account node, used to route signed-in users to their node. |
+| Front door | The network's generic URL, served by several volunteer front-door nodes. |
+| Front-door node | A member node that also serves the generic URL. |
+| Partner node | One of the 2 nodes holding a node's encrypted, restore-only copy of its private data. |
+| Recovery key | The key that decrypts partner copies. Held offline by the institution, with an escrow copy at the Foundation. |
 | Handling node | The node where a manuscript was created. All unpublished data for it lives there. |
 | Feed | A node's signed, append-only log of public events, replicated to all nodes. |
 | Catalog | Metadata and full text of all publications, held on every node for search. |

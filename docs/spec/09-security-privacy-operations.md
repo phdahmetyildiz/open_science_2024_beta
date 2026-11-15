@@ -12,7 +12,12 @@
 | Stolen node key | Attacker signs events as a node | Encrypted key storage, rotation, `KeyRecovery` with a cut-off, fork detection. |
 | Fake researcher identities | Review rings: an author creates ORCID accounts to review their own paper | Eligibility rule (05 §8.1), conflict checks, at least one reviewer not suggested by the author, editor oversight, reporting, published review histories. |
 | Reviewer de-anonymisation during review | Author identifies a reviewer through metadata | Reviewer identity is stored only on the handling node and never sent to author views or across nodes before publication. Uploaded review files are stripped of metadata. Invitations sent to account nodes contain no author-visible data. |
-| Leak of unpublished manuscripts | A node in the middle reads drafts | Unpublished data never leaves the handling node (A-09). Guests only see what their manuscript role allows. |
+| Leak of unpublished manuscripts | A node in the middle reads drafts | Unpublished data never leaves the handling node in readable form (A-09). Guests only see what their manuscript role allows. |
+| Partner reads a partner copy | A partner node tries to read the private data it stores | Data is encrypted on the source node to the recovery key and the Foundation escrow key. The partner holds neither. |
+| Misuse of the escrow key | The Foundation decrypts a node's data without cause | Escrow procedure with defined triggers. The key is held under dual control (two officers). Every use is announced to all node administrators. |
+| Lost recovery key | The institution can't restore its own node | The Foundation escrow procedure (03 §11.6). The console asks admins to confirm yearly that the recovery key is still stored. |
+| Front-door domain hijack | Attacker takes over the generic domain or its DNS | Registrar lock, DNSSEC, two-person control at the Foundation, a secondary DNS provider. Every node shows its own domain as a fallback. |
+| Login-token replay | A stolen one-time login token is reused | Tokens are signed, limited to the target node, expire after 60 seconds, and can be used once (nonce). |
 | Malicious uploads | Scripts in SVG, malware in supplementary files | SVG sanitising, malware scan, separate download domain or `Content-Disposition: attachment`, strict Content Security Policy. |
 | LaTeX code execution | `\write18` | LaTeX is parsed into the SDM, never executed (06 §4.2). Renderers run sandboxed with no network access. |
 | Common web attacks | XSS, CSRF, injection, account takeover | Framework defaults, CSRF tokens, parameterised queries, CSP, ORCID-only sign-in (no passwords stored), rate limiting, security headers. |
@@ -62,15 +67,15 @@ This section is to be confirmed by legal counsel.
 | Erasure | Account data, drafts and unpublished manuscripts can be deleted on request. **Published records can't be erased.** They are part of the scholarly record (Art. 17(3)(d), archiving in the public interest), and the terms state this clearly. A person's profile can be anonymised, but their names on published records remain. |
 | Retention | Withdrawn and rejected manuscripts (not published by the author): kept for 2 years for integrity investigations, then deleted. Guest sessions: 30 days. Audit logs: 2 years. Report cases: 5 years after closure. |
 | Transparency | Privacy notice on every node, using a template provided by the Foundation. The terms and the invitation emails explain the transparency principle (D-03, D-04). |
-| Transfers | Nodes outside the EU/EEA receive only public data through feeds. Unpublished data stays on the handling node. Guest access by reviewers from abroad is access to the handling node, not a data transfer to another node. |
+| Transfers | Nodes outside the EU/EEA receive only public data through feeds. Unpublished data stays readable only on the handling node. Partner copies are encrypted so the partner can't read them, and partners SHOULD be in the same legal area anyway (03 §11.2). The account directory (ORCID iD and account node only) is public network data and is described in the privacy notice. Guest access by reviewers from abroad is access to the handling node, not a data transfer to another node. |
 | AI | [V2] Unpublished manuscripts may be sent to AI services only if they run on the handling node or on a processor under a data processing agreement, never to services that train on the input without consent. |
 
 ## 6. Operations
 
 | Area | Requirement |
 |---|---|
-| Backups | Nightly encrypted backups of PostgreSQL, the package store and the node key, kept for 30 days. Restore tested monthly by an automated job that reports to the console. |
-| Disaster recovery | Public data is recoverable from the network (feeds and replicas). Private data comes only from backups. Target: restore within 24 hours, lose at most 24 hours of private data. |
+| Backups | Two layers. (1) Nightly encrypted backups by the institution (PostgreSQL, package store, node key), kept for 30 days. (2) Continuous encrypted partner copies on 2 other nodes (03 §11.3). Restores from both layers are tested monthly by an automated job that reports to the console. |
+| Disaster recovery | Public data is recoverable from the network (feeds and replicas). Private data comes from the partner copies, or from the institution's backups. Target: restore within 24 hours, with at most 15 minutes of private data lost (NFR-14). |
 | Monitoring | Health endpoint and Prometheus metrics. Console alerts for feed lag over 1 hour, replication deficits, failed challenges, disk over 80%, certificate expiry within 14 days, failed backups, and fork proofs. |
 | Logging | Structured logs without manuscript content. Personal data in logs is pseudonymised after 30 days. |
 | Updates | Signed releases, `osn upgrade`, release notes with protocol compatibility. Security releases are announced on a mailing list for node admins. |

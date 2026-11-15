@@ -69,7 +69,8 @@ erDiagram
 | `catalog` | `PublicationPublished`: DOI, versions, metadata, abstract, plain text, `tsvector` for search |
 | `publication_status` | `PublicationStatusChanged` |
 | `replica` | `ReplicaAdded` / `ReplicaRemoved`, plus local audit results |
-| `steward` | `ResolutionStewardChanged` |
+| `account_directory` | `AccountRegistered`, `AccountClosed`, `AccountMoved`: ORCID iD, account node, registered at |
+| `partner` | `PartnerAgreement`, `PartnerAgreementEnded`, `PartnerCopyStatus`: source node, partner node, since, last copy, integrity status |
 
 These tables are caches. They can be rebuilt by replaying `feed_event`.
 
@@ -145,6 +146,9 @@ REST over HTTPS, JSON, described with OpenAPI 3.1, authenticated by session cook
 | `/oai` | OAI-PMH 2.0 |
 | `/sitemap.xml` | Sitemap |
 | `/.well-known/osn` | Node info |
+| `/healthz` | Health status, used by the front-door DNS checks and by peers (03 §11.4) |
+
+The generic URL (`https://<network-domain>`, 02 §6) serves the same public endpoints as every node, plus sign-in with routing to the account node.
 
 ## 6. Federation API (node-to-node)
 
@@ -162,6 +166,9 @@ All requests are signed with RFC 9421 HTTP Message Signatures using the sending 
 | `/fed/v1/packages/{packageId}/files/{path}` | GET | Package file, with range requests |
 | `/fed/v1/challenges` | POST | Storage challenge (04 §6) |
 | `/fed/v1/profiles/{orcid}` | GET | Full public profile of an account hosted here |
+| `/fed/v1/partner-copies/{nodeId}/chunks/{hash}` | PUT, GET | Store or fetch an encrypted partner-copy chunk (03 §11.3). PUT is allowed only for the source node. GET requires a signature by the source node key or by the source node's recovery signing key, an Ed25519 key generated together with the recovery key whose public part is in `PartnerAgreement`. A lost node's key is inside the encrypted copy, so a restore has to authenticate with the recovery signing key. |
+| `/fed/v1/partner-copies/{nodeId}/index` | GET | List of chunks with hashes, for restores and integrity checks |
+| `/auth/v1/handoff` | POST | Accept a one-time login token from a front-door or other node (02 §6.2) |
 
 Rate limits apply per peer node. Feeds and package files are public data. Federation endpoints that serve them MAY also allow unsigned requests, so independent mirrors and archives can read them.
 

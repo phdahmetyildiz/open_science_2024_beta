@@ -48,6 +48,8 @@ One person can hold several roles. Roles are always scoped: for example, an edit
 ### V1 — first production release
 
 - Node installation, genesis of the network, and admission voting.
+- The front door: the network's generic URL, served by several nodes, with routing of signed-in users to their account node (D-15).
+- Encrypted, restore-only partner copies of every node's private data, and deadlines that pause during handling-node outages (D-16).
 - Signed feeds and gossip replication of public data.
 - ORCID login. Profiles. Reviewer pool opt-in. Reporting a user.
 - Rich-text editor and restricted-LaTeX editor on one document model. Math, figures, tables, references and cross-references.
@@ -67,7 +69,7 @@ One person can hold several roles. Roles are always scoped: for example, an edit
 - DOIs for individual peer-review reports.
 - Writing publications to authors' ORCID records (needs ORCID membership).
 - Similarity and plagiarism check (Crossref Similarity Check).
-- Encrypted standby copies of unpublished manuscripts on a second node, so a node outage doesn't stall reviews.
+- Automatic takeover of a failed node's users and manuscripts by a partner node, so an outage doesn't stall reviews (D-16, 03 §11.6).
 - Changing network parameters by vote. Optionally, network-level node suspension (see 10).
 - Track changes in the editors.
 
@@ -96,7 +98,9 @@ One person can hold several roles. Roles are always scoped: for example, an edit
 | NFR-05 | Performance | Landing pages MUST render in under 1 s (p95) from any node holding a replica, and in under 2.5 s from a node that has to fetch from a peer. Search MUST answer in under 1 s (p95) for 1M publications. |
 | NFR-06 | Consistency | Public network state (membership, catalog, replica lists) MUST converge on all reachable nodes within 15 minutes under normal conditions. |
 | NFR-07 | Security | All node-to-node traffic MUST be TLS-encrypted and signed by the sending node. All public records MUST be verifiable against node signatures. |
-| NFR-08 | Privacy | Unpublished manuscripts, reviewer identities during review, and confidential comments MUST never leave the handling node, except in encrypted backups. |
+| NFR-08 | Privacy | Unpublished manuscripts, reviewer identities during review, and confidential comments MUST never leave the handling node in readable form. Encrypted backups and partner copies are allowed, as long as the holder can't decrypt them (03 §11). |
+| NFR-14 | Recoverability | If a node is lost completely, its private data MUST be restorable from a partner copy with at most 15 minutes of data loss. |
+| NFR-15 | Front door | The generic URL MUST stay reachable as long as at least one front-door node is healthy. Unhealthy nodes MUST drop out of DNS within 5 minutes. |
 | NFR-09 | Accessibility | The UI MUST meet WCAG 2.1 AA. Published HTML MUST use MathML. PDFs SHOULD be tagged. |
 | NFR-10 | Internationalisation | The UI MUST be translatable; English and German ship in V1. |
 | NFR-11 | Upgradability | Nodes MUST interoperate as long as they are within one major protocol version of each other. Upgrades MUST be applicable without downtime longer than 5 minutes. |
