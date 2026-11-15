@@ -1,3 +1,4 @@
+# This file is being archived on 15.11.2026 and is not part of the new version.
 from flask import Flask, request, jsonify
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests

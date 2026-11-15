@@ -1,3 +1,4 @@
+-- This file is being archived on 15.11.2026 and is not part of the new version.
 CREATE TABLE IF NOT EXISTS articledata (
                         article_id INTEGER PRIMARY KEY AUTOINCREMENT,
                         article_name TEXT NOT NULL,

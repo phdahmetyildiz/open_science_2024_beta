@@ -1,3 +1,4 @@
+# This file is being archived on 15.11.2026 and is not part of the new version.
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import os

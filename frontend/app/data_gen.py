@@ -1,3 +1,4 @@
+# This file is being archived on 15.11.2026 and is not part of the new version.
 from faker import Faker
 from backend_json import load_json, save_json
 import base64
