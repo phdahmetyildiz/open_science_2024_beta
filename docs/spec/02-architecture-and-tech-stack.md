@@ -112,7 +112,9 @@ PHP (with Laravel) is a reasonable choice for a classic web application. It is e
 - **Federation, gossip, replication and the collaboration server are long-running processes.** PHP's request–response model handles them through extra daemons, which work but add operational complexity.
 - **Scaling isn't the deciding factor.** Each node serves one institution's researchers and readers. The network grows by adding nodes, not by making one node large. PHP, Node.js and Go all scale far beyond what one node needs.
 
-### 4.3 Recommendation: TypeScript throughout, delivered as one container stack
+### 4.3 Decision: TypeScript throughout, delivered as one container stack
+
+Confirmed as D-14 on 2026-11-15. The PDF engine is the only part still open; it is chosen after spike S1.
 
 | Layer | Choice | Reason |
 |---|---|---|
@@ -124,7 +126,7 @@ PHP (with Laravel) is a reasonable choice for a classic web application. It is e
 | Collaboration | **Yjs** with **Hocuspocus** server | CRDT-based real-time collaboration for both editors. MIT licensed. |
 | Math | **KaTeX** (live preview), **Temml** (LaTeX to MathML for HTML/JATS), **MathLive** (visual math input) | Fast, accurate, all JavaScript. |
 | LaTeX parsing | **unified-latex** | Parses LaTeX to an AST, so the subset can be validated and converted. |
-| PDF | **Typst** (embedded CLI), with LaTeX-math-to-Typst conversion (for example via mitex) | Fast, deterministic, sandboxed, a single small binary instead of a 4 GB TeX installation. *To be validated in a Phase-0 spike against HTML-to-PDF (Paged.js plus headless Chromium).* |
+| PDF | **Typst** (embedded CLI), with LaTeX-math-to-Typst conversion (for example via mitex) | Fast, deterministic, sandboxed, a single small binary instead of a 4 GB TeX installation. *Open: compared against HTML-to-PDF (Paged.js plus headless Chromium) in Phase-0 spike S1; the result is recorded here.* |
 | Import (V2) | **Pandoc** | Standard DOCX and LaTeX conversion. |
 | Database | **PostgreSQL** | Relational integrity for the workflow, JSONB for documents and events, built-in full-text search, and the job queue (pg-boss). |
 | ORM / migrations | **Drizzle** or **Prisma** | Typed schema with migrations. |

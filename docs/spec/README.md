@@ -12,7 +12,7 @@
 | # | Document | Content |
 |---|---|---|
 | 01 | [Overview and scope](01-overview-and-scope.md) | Vision, principles, roles, release scope, non-functional requirements |
-| 02 | [Architecture and tech stack](02-architecture-and-tech-stack.md) | Node architecture, data placement, stack recommendation, deployment |
+| 02 | [Architecture and tech stack](02-architecture-and-tech-stack.md) | Node architecture, data placement, tech stack, deployment |
 | 03 | [Federation and governance](03-federation-and-governance.md) | Node identity, signed feeds, admission voting, key management |
 | 04 | [Publications, replication and DOI](04-publications-replication-doi.md) | Publication packages, replica placement, audits, DOI registration, indexing |
 | 05 | [Editorial workflow](05-editorial-workflow.md) | Fields and boards, manuscript state machine, review, decisions, public record |
@@ -41,6 +41,7 @@ Requirement keywords **MUST**, **SHOULD** and **MAY** are used as in RFC 2119. R
 | D-11 | V1 has a **human editor** and a review assistant **stub that returns zero suggestions**. The AI interfaces and feedback data model exist from V1. |
 | D-12 | Word and LaTeX file import come in **V2**. |
 | D-13 | Node installation and operation must be **easy for a university IT department**. |
+| D-14 | Tech stack: **TypeScript throughout** (NestJS backend, React frontend, Tiptap/CodeMirror/Yjs editors, PostgreSQL), delivered as a Docker Compose stack of three containers. The PDF engine (Typst or HTML-to-PDF) is chosen after Phase-0 spike S1 (see 02 §4.3). |
 
 ## Assumptions to confirm
 
