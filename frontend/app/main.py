@@ -1,3 +1,4 @@
+# This file is being archived on 15.11.2026 and is not part of the new version.
 
 from fastapi import Cookie, Depends, FastAPI, Form, HTTPException, Header, Response
 from fastapi.staticfiles import StaticFiles

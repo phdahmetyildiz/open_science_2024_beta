@@ -1,3 +1,4 @@
+# This file is being archived on 15.11.2026 and is not part of the new version.
 # Use an official Python image as a base
 FROM python:3.9-slim
 
