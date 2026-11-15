@@ -1,3 +1,5 @@
+> **Archived on 15.11.2026.** This prototype is not part of the new version. See the [main README](../README.md) and the [specification](../docs/spec/README.md).
+
 # **THIS IS THE README OF THE FRONTEND GROUP**
 
 # about this project
