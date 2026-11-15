@@ -15,8 +15,11 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 | UC-N6 | Retire a node | Node admin | V1 |
 | UC-N7 | Mark another node as distrusted | Node admin | V1 |
 | UC-N8 | Upgrade, back up and monitor a node | Node admin | V1 |
+| UC-N9 | Set up partner nodes | Node admin | V1 |
+| UC-N10 | Restore a lost node from a partner copy | Node admin / Foundation | V1 |
+| UC-N11 | Operate as a front-door node | Node admin / Foundation | V1 |
 | **Researchers** | | | |
-| UC-U1 | Sign in with ORCID and create an account | Researcher | V1 |
+| UC-U1 | Sign in through the generic URL and create an account | Researcher | V1 |
 | UC-U2 | Maintain profile and join the reviewer pool | Researcher | V1 |
 | UC-U3 | Report a user | Researcher | V1 |
 | UC-U4 | Handle a user report | Node admin / board chair | V1 |
@@ -46,7 +49,7 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 | UC-P3 | Find, read and cite a publication | Visitor | V1 |
 | UC-P4 | Read the review history | Visitor | V1 |
 | UC-P5 | Correct or retract a publication | Board chair / editor | V1 |
-| UC-P6 | Recover the DOI resolution of a lost node | Node (system) | V1 |
+| UC-P6 | Keep working while a node is down | Researcher, node (system) | V1 |
 
 ---
 
@@ -110,7 +113,7 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 
 ### UC-N6 Retire a node
 
-- **Main flow:** the admin chooses *Retire*. The console shows the publications for which this node holds one of too few copies, and the DOIs it stewards. The node announces `NodeRetired` only after the repair processes have placed enough other copies, or the admin forces retirement after a warning. Stewardship moves to other nodes (UC-P6). Researchers with accounts on the node are asked to move to another node (V2) or are informed that their account will be closed.
+- **Main flow:** the admin chooses *Retire*. The console shows the publications for which this node holds one of too few copies, and the partner copies it holds for other nodes. The node announces `NodeRetired` only after the repair processes have placed enough other copies and its partners have found replacements, or the admin forces retirement after a warning. DOIs are unaffected, because they resolve through the front door. Researchers with accounts on the node are asked to move to another node (V2) or are informed that their account will be closed.
 
 ### UC-N7 Mark another node as distrusted
 
@@ -118,23 +121,56 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 
 ### UC-N8 Upgrade, back up and monitor a node
 
-- Covered in 02 §5.3 and 09 §6. The console shows the available upgrades, the backup status (last success, restore test date), feed lag per peer, replication health and certificate expiry.
+- Covered in 02 §5.3 and 09 §6. The console shows the available upgrades, the backup status (last success, restore test date), the age of each partner copy, feed lag per peer, replication health and certificate expiry.
+
+### UC-N9 Set up partner nodes
+
+- **Actor:** node administrator.
+- **Main flow:**
+  1. The console asks for partners after admission. It suggests nodes in the same legal area with enough declared capacity and few partner duties.
+  2. The admin sends a partner request to a candidate. The candidate's admin accepts it.
+  3. Both nodes publish `PartnerAgreement`. The source node starts shipping encrypted chunks (03 §11.3).
+  4. The admin generates the **recovery key**, stores it offline, and confirms in the console that it is stored. The Foundation's escrow key is added as a second recipient automatically.
+  5. Steps 2 and 3 are repeated for the second partner.
+- **Exceptions:** without at least one partner, the node can't accept submissions (03 §11.2). If a partner copy is more than 1 hour old, the console raises an alert.
+
+### UC-N10 Restore a lost node from a partner copy
+
+- **Actor:** node administrator of the institution, or the Foundation (escrow procedure).
+- **Preconditions:** the node is lost (hardware failure, deleted VM, ransomware). The recovery key is available.
+- **Main flow:**
+  1. The admin installs a fresh node and runs `osn restore --from-partner <url>` with the recovery key.
+  2. The tool restores the database, private files and node key from the latest partner chunks.
+  3. The node syncs its own feed from the network and continues after the highest known `seq`, so no fork is created.
+  4. It syncs public data and extends all running deadlines by the outage (03 §11.5). Affected users are notified.
+- **Alternatives:** the institution can't restore. The Foundation uses the escrow key and runs the restored node on a custodian node (03 §11.6). Every use of the escrow key is announced to all node administrators.
+- **Result:** the node is back with the same identity. At most 15 minutes of private data are lost.
+
+### UC-N11 Operate as a front-door node
+
+- **Actors:** node administrator, Foundation.
+- **Main flow:** the admin volunteers in the console. The Foundation adds the node to the health-checked DNS of the generic domain, and issues a token that can only write `_acme-challenge` records. The node obtains a certificate for the generic domain through DNS-01, and installs the Foundation's ORCID client for that domain. From then on, it serves the generic URL in addition to its own domain (02 §6).
+- **Exceptions:** if health checks fail, DNS stops listing the node within 5 minutes. It is listed again automatically once it recovers.
 
 ## Researchers
 
-### UC-U1 Sign in with ORCID and create an account
+### UC-U1 Sign in through the generic URL and create an account
 
 - **Actor:** researcher.
 - **Main flow:**
-  1. The researcher clicks *Sign in with ORCID* on any node.
-  2. They are redirected to ORCID, authenticate and authorise. The node receives the ORCID iD and name (OpenID Connect).
-  3. If the iD is new to the whole network (not in any account node's directory), the node creates an account and becomes the researcher's **account node**.
-  4. The researcher enters and verifies an email address (ORCID often doesn't share it), and accepts the terms and the privacy notice.
-  5. The profile is prefilled from the public ORCID record: affiliations, works, education.
+  1. The researcher opens the generic URL and clicks *Sign in with ORCID*.
+  2. They are redirected to ORCID, authenticate and authorise. The answering front-door node receives the ORCID iD and name (OpenID Connect).
+  3. The node finds no entry for the iD in the account directory (03 §10), so it shows the node chooser. The suggested node is the member institution matching an affiliation on the researcher's ORCID record.
+  4. The researcher confirms or picks another node. They are redirected there with a one-time login token (02 §6.2).
+  5. The chosen node creates the account and publishes `AccountRegistered`. It is now the researcher's **account node**.
+  6. The researcher enters and verifies an email address (ORCID often doesn't share it), and accepts the terms and the privacy notice.
+  7. The profile is prefilled from the public ORCID record: affiliations, works, education.
 - **Alternatives:**
-  - 3a. The iD already has an account on another node. The node creates a **guest session** and links to the account node for profile changes (03 §10).
-  - 3b. The researcher only wants to read. No account is needed.
-- **Result:** a researcher account on the node.
+  - 3a. The iD already has an account. The front door redirects the researcher to their account node with a login token. **This is how they reach the same node on every visit.**
+  - 3b. The account node is unreachable. The front door shows a status page with the outage time. Reading and search keep working (UC-P6).
+  - 1a. The researcher signs in directly on a node's own domain. Steps 3 to 7 are the same. If the account lives on another node, they are redirected there, unless they came to work on a manuscript hosted on this node, in which case they get a **guest session** (03 §10).
+  - 1b. The researcher only wants to read. No account is needed.
+- **Result:** a researcher account on the chosen node, and an entry in the account directory.
 
 ### UC-U2 Maintain profile and join the reviewer pool
 
@@ -294,8 +330,14 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 - **Correction:** the authors request it, and the editor or board chair approves. A new version package is published (04 §10). Earlier versions stay available, with a banner pointing to the current one.
 - **Retraction / expression of concern:** after an integrity investigation (following COPE), the board chair decides. The handling node publishes `PublicationStatusChanged` with the notice. The content stays available with a banner. The Crossref metadata is updated.
 
-### UC-P6 Recover the DOI resolution of a lost node
+### UC-P6 Keep working while a node is down
 
-- **Trigger:** the resolution steward of a DOI has been dormant for 30 days, or has retired.
-- **Main flow:** every node computes the next steward deterministically (04 §7.3). That node appends `ResolutionStewardChanged` and updates the URL at Crossref with its own credentials.
-- **Result:** the DOI resolves to a live landing page again.
+- **Trigger:** a node goes offline without warning.
+- **Main flow:**
+  1. Health checks fail, and DNS stops listing the node for the generic URL within 5 minutes (if it is a front-door node).
+  2. Readers notice nothing. Landing pages, DOIs, search and review histories are served by other nodes from the catalog and the replicas (03 §11.1).
+  3. Researchers whose account node is down see a status page on the front door. They can still read, and can still work on manuscripts hosted on other nodes through direct links.
+  4. Co-authors, editors and reviewers of manuscripts handled on the failed node see a banner ("unreachable since …") on the affected tasks. No reminders are sent.
+  5. When the node returns, it extends all running deadlines by the outage and notifies those affected (03 §11.5).
+- **Alternatives:** the node doesn't return. The institution or the Foundation restores it from a partner copy (UC-N10).
+- **Result:** public content stays available throughout. Private work is delayed but not lost.

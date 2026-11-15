@@ -85,7 +85,11 @@ Each node appends a `Heartbeat` event at least every 24 hours. Its payload inclu
 | `PublicationPublished` | Handling node | Catalog entry for a new publication or version (see 04). |
 | `PublicationStatusChanged` | Handling node, or a board chair's node in V2 | Correction, expression of concern, retraction. |
 | `ReplicaAdded` / `ReplicaRemoved` | The node storing or dropping the copy | Replica list (see 04). |
-| `ResolutionStewardChanged` | The new steward node | Which node keeps a DOI's resolution URL up to date (see 04 §7). |
+| `AccountRegistered` / `AccountClosed` | Account node | Account directory: this ORCID iD has its account here (§10). |
+| `AccountMoved` | Old account node [V2] | The account was transferred to another node. |
+| `PartnerAgreement` / `PartnerAgreementEnded` | Both nodes, each in its own feed | Who holds whose encrypted partner copy (§11). |
+| `PartnerCopyStatus` | Partner node, daily | Freshness and integrity of the partner copies it holds (§11.3). |
+| `TakeoverClaim` / `TakeoverStarted` / `TakeoverEnded` | Partner nodes [V2] | Automatic takeover of a failed node (§11.7). |
 
 Each payload is defined by a versioned JSON Schema published with the software.
 
@@ -200,6 +204,70 @@ Private, targeted messages (for example "you have been invited to review manuscr
 
 Every node is an ORCID client. That's why no federated session protocol is needed:
 
-- A researcher's **account node** is where they first signed in. It owns their profile and their email address.
+- A researcher's **account node** is the node they chose as home on their first sign-in. It's usually suggested by the front door, based on their ORCID affiliation (02 §6.2). It owns their profile, email address, dashboard and notification settings.
+- The **account directory** maps every ORCID iD with an account to its account node. It is built from `AccountRegistered`, `AccountClosed` and `AccountMoved` events, so every node holds it. The events contain only the ORCID iD, the node and the date; no email address and no profile data. ORCID iDs are public identifiers, and the privacy notice says that the directory exists.
+- **Routing**: when a researcher signs in on any node, including the front door, that node checks the directory. If the account is elsewhere, the node redirects to the account node with a one-time login token (02 §6.2), unless the researcher came to work on a manuscript hosted on this node.
+- **Duplicate registration**: if two nodes register the same ORCID iD before seeing each other's event, the earlier `created` timestamp wins, with the lower node ID as a tiebreaker. The other node turns its account into a pointer to the winner, moves any data it already holds there, and tells the user.
 - To work on another node (a co-author editing a manuscript, a reviewer, an editor), the researcher follows the link and signs in there with ORCID. That node creates a **guest session** tied to the ORCID iD. It has no profile of its own: it shows the profile from the reviewer pool or account node, and grants only the roles scoped to the specific manuscript.
 - Researchers can move their account to another node (V2) through a signed transfer between the two nodes.
+
+## 11. Node failure and partner copies
+
+### 11.1 What a sudden outage affects
+
+| Affected | Behaviour |
+|---|---|
+| Reading, search, landing pages, DOIs | Unaffected. The catalog is on every node, packages are on R nodes, and DOIs resolve through the front door (02 §6.3). |
+| Researchers whose account node is down | Can still sign in with ORCID on other nodes, and work on manuscripts hosted elsewhere. Their dashboard, settings and notifications wait until the node returns. The front door shows a status page. |
+| Manuscripts handled on the failed node | Unavailable to authors, editors and reviewers until the node is back or restored. Deadlines are extended afterwards (§11.5). |
+| Signed inbox messages to the failed node | Retried for 72 hours. After that, the sender shows the recipient's task as "not delivered". |
+| Private data if the node never returns | Restored from a partner copy (§11.6). At most 15 minutes of data are lost (NFR-14). |
+
+### 11.2 Partners
+
+- Every active node has **2 partner nodes**, from different institutions. Partners SHOULD be in the same legal area (for example the EU/EEA), to keep GDPR simple.
+- The admin console suggests candidates: the same legal area, enough declared capacity, and few existing partner duties. The agreement is mutual. Both administrators accept, and both nodes publish `PartnerAgreement` in their feeds, so the whole network knows who holds whose copy. Partnerships don't have to be reciprocal.
+- A node MUST have at least one partner before it accepts submissions, and SHOULD have two. The console warns while a partner is missing.
+- A partner stores only private data, which is small compared with publication packages. The storage is counted against the partner's declared capacity.
+
+### 11.3 What a partner copy contains
+
+| Item | Specification |
+|---|---|
+| Content | Continuous PostgreSQL WAL archive, a weekly base backup, the private part of the package store (assets of drafts and unpublished versions), node configuration and the node's private key. |
+| Encryption | Encrypted **on the source node, before upload**, with public-key encryption (X25519 with ChaCha20-Poly1305, in the `age` format). There are two recipients: the institution's **recovery key** (kept offline, for example in a safe or an HSM) and the **Foundation's escrow key**. The partner only ever holds ciphertext and can't read anything. Together with the recovery key, the institution generates a **recovery signing key** (Ed25519). It authenticates restore downloads when the node key itself is lost (08 §6). |
+| Integrity | Each chunk is identified by the hash of its ciphertext, so the partner can check integrity without decrypting. |
+| Transport | `PUT /fed/v1/partner-copies/{nodeId}/chunks/{hash}`, signed by the source node (08 §6). |
+| Frequency | WAL segments are shipped at least every 5 minutes, base backups weekly. Retention is 30 days. |
+| Monitoring | The partner publishes `PartnerCopyStatus` daily: last chunk received, total size, integrity result. The source node's console alerts if a partner copy is more than 1 hour old. |
+
+### 11.4 Detecting an outage
+
+- Nodes probe the `/healthz` endpoint of peers they depend on every minute: their partners, the handling nodes of their users' current tasks, and the front-door nodes. These results are local and aren't written to feeds.
+- The front door and account nodes show banners like "Node X has been unreachable since 14:20" next to affected tasks and accounts.
+- The *dormant* status (no heartbeat for 30 days, §3.4) stays the deterministic status used for quorums and replica placement. Short outages don't change it.
+
+### 11.5 Pausing deadlines
+
+- Workflow deadlines run on the handling node. While it's down, no reminders or escalations fire.
+- A node records a liveness timestamp in its own database every minute. On restart, it computes its downtime as the time since the last recorded liveness. It then extends every running deadline (editor steps, invitations, reviews, revisions) by the downtime, rounded up to full days, and notifies the people affected.
+- Account nodes don't send reminders for tasks on an unreachable handling node.
+
+### 11.6 Restoring a node after total loss [V1]
+
+1. The institution installs a new node, on the same domain or a new one (in which case it publishes `NodeEndpointChanged`).
+2. `osn restore --from-partner <partner-url>` asks for the recovery key, downloads the latest chunks from either partner, decrypts them, and restores the database, the private files and the node key.
+3. **Before appending any event**, the node fetches its own feed from its peers and continues after the highest `seq` the network holds. A restored backup is usually a little behind the feed the network has already seen, and appending from the old position would create a fork (§3.3).
+4. Public data (other feeds, packages) is synced from the network as usual.
+5. The node resumes with the same identity. Its users and manuscripts are back, and deadlines are extended (§11.5).
+
+**If the institution can't restore** (for example it has left the network or lost its recovery key), the Foundation follows a documented escrow procedure. It decrypts the partner copy with the escrow key and runs the restored node, with the same identity and key, on a **custodian node** chosen by the Foundation. Users are notified and can move their accounts and manuscripts to other nodes (V2 `AccountMoved`, or manual export in V1). The escrow key is only used under this procedure, and every use is announced to node administrators.
+
+### 11.7 Automatic takeover [V2, outline]
+
+Takeover means a partner serves a failed node's users and manuscripts until it returns. The main points to design in V2:
+
+- Partners hold a **readable** standby copy. That requires a data processing agreement between the institutions, and an exception to NFR-08 for partners.
+- **Trigger**: both partners have found the node unreachable for 48 hours, and no heartbeat has appeared in that time. Both sign a `TakeoverClaim`. The partner with the higher rendezvous score (04 §5.1) takes over and publishes `TakeoverStarted`.
+- The institution's domain can't be taken over, so the taking partner serves the data **under its own domain**. The account directory and the front door route the affected users to it.
+- **Fencing**: when the original node returns and sees `TakeoverStarted`, it switches the affected data to read-only and syncs the changes back from the partner. Then the partner hands control back with `TakeoverEnded`. Manuscript text merges automatically (Yjs). Workflow actions taken by the original during a network partition are flagged for the editor to resolve.

@@ -13,7 +13,7 @@
 | Concept | Description | Mutability |
 |---|---|---|
 | **Publication package** | All files of one published version: content in every format, sources, figures, and the complete review history up to that version. | Immutable, identified by its hash |
-| **Publication record** | Per DOI: list of versions, current status, replica list, resolution steward. | Derived from feed events on every node |
+| **Publication record** | Per DOI: list of versions, current status, replica list. | Derived from feed events on every node |
 | **Catalog entry** | Metadata, abstract and plain full text for search. Part of `PublicationPublished`. | Replicated to every node |
 
 The replica list is part of the *record*, not of the *package*. That's what lets copies stay immutable while "all existing copies get updated" (R-02): adding a copy changes the record on every node, and no package file has to be rewritten.
@@ -85,8 +85,6 @@ Every node computes each publication's record from the feeds:
 | `versions[]` (package ID, version number, date) | All `PublicationPublished` events for the DOI from the handling node |
 | `status` (`published`, `corrected`, `expression_of_concern`, `retracted`) | Latest `PublicationStatusChanged` |
 | `replicas[]` | Nodes with a `ReplicaAdded` for the package and no later `ReplicaRemoved`, filtered to verified (§6) and non-distrusted nodes |
-| `resolution_steward` | Handling node, or the latest valid `ResolutionStewardChanged` |
-
 A node only makes statements about itself (`ReplicaAdded` means "I hold a copy"). So there are no conflicting writes, and every node converges on the same replica list.
 
 ## 5. Placement
@@ -143,10 +141,10 @@ sequenceDiagram
 
 ### 7.3 Resolution
 
-- The DOI resolves to `https://{steward-domain}/p/{doi}`, the landing page on the **resolution steward**. Initially the steward is the handling node.
-- If the steward is dormant or has retired, the highest-ranked active replica node with valid deposit credentials becomes the new steward. It appends `ResolutionStewardChanged` and updates the DOI's URL at Crossref. Ranking is deterministic, so only one node takes over.
-- [V2] Crossref multiple resolution MAY additionally list several replica URLs.
-- Every node can serve every landing page. `https://{any-node}/p/{doi}` works everywhere. Nodes without a replica fetch the package from a replica and cache it.
+- Every DOI resolves to the **front door**: `https://<network-domain>/p/{doi}` (02 §6). Any healthy front-door node serves the landing page. Nodes without a local replica fetch the package from a replica and cache it.
+- The resolution URL never has to change when a node fails or retires. A DOI only depends on the front door being reachable, and at least 3 front-door nodes back it.
+- `https://{any-node}/p/{doi}` also works on every node, for direct links.
+- [V2] Crossref multiple resolution MAY additionally list individual replica URLs.
 
 ## 8. Reading, indexing and archiving
 

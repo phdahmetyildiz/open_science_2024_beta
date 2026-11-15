@@ -14,6 +14,7 @@ These prototypes reduce the biggest technical risks before V1 development starts
 | S4 Replication | Do placement, audits and repair work? | Simulation with 1,000 packages and nodes failing: R copies restored within the target time. |
 | S5 Crossref | Can DOIs be deposited with per-node credentials? | Test deposits in the Crossref sandbox under the Foundation's account. |
 | S6 Collaboration | Do Yjs, Tiptap and CodeMirror work for both modes? | Two authors editing a 30-page paper in real time without problems. |
+| S7 Front door and restore | Do health-checked DNS, DNS-01 certificates and login handoff work across 3 nodes? Can a node be restored from a partner copy? | Killing a front-door node drops it from DNS within 5 minutes and users keep signing in. A deleted node is restored from its partner copy with at most 15 minutes of data lost and no feed fork. |
 
 Organisational work in parallel: found the Foundation, join Crossref, apply for an ISSN, draft the operator agreement and terms, recruit the founding board chairs.
 
@@ -22,7 +23,7 @@ Organisational work in parallel: found the Foundation, join Crossref, apply for 
 The scope is in 01 §5. Suggested order:
 
 1. Node core: installation, ORCID sign-in, accounts, admin console.
-2. Federation: feeds, gossip, genesis, admission, directories.
+2. Federation: feeds, gossip, genesis, admission, directories, account directory, front door, partner copies and restore.
 3. Authoring: SDM, both editors, collaboration, references, figures, rendering.
 4. Editorial workflow: boards, submission through decisions, revisions, appeal.
 5. Production, packages, DOI, replication, public reading site, search, OAI-PMH.
@@ -42,7 +43,8 @@ The scope is in 01 §5. AI work in V2 starts by collecting the reviewer feedback
 | Governance attack (collusion, D-09) | Fake nodes, loss of trust | Foundation membership requirement and the Crossref credential lever. Revisit network suspension (§3 Q1). |
 | Operational burden for institutions | Few nodes | One-command installer, low resource needs, a strong admin console, Foundation support. |
 | The restricted LaTeX subset is too narrow for some fields | Lost authors | Spike S2. Board-defined extensions. The SVG route for TikZ. |
-| A handling node fails during review | Workflow stalls | Backups in V1, encrypted standby copies in V2. |
+| A handling node fails during review | Workflow stalls | V1: deadlines pause and are extended, and partner copies prevent data loss (03 §11). V2: automatic takeover. |
+| The front door is the only shared entry point | Users can't find their node if the generic domain fails | At least 3 front-door nodes, two DNS providers, DNSSEC, registrar lock. Every node's own domain keeps working. |
 
 ## 3. Open questions
 
@@ -60,3 +62,7 @@ The scope is in 01 §5. AI work in V2 starts by collecting the reviewer feedback
 | Q10 | Should the house style, taxonomy and network parameters be governed by node votes, by the Foundation, or by an editorial council? | Network parameter changes need a defined process (V2). | Technical parameters: node vote (2Q quorum). Editorial style and policies: an editorial council of board chairs. |
 | Q11 | Is English required for title, abstract and keywords (A-07)? | Indexing vs. support for other languages. | Yes, required, alongside the original language. |
 | Q12 | Do researchers need to verify an institutional affiliation to become editors or board chairs? | Trust in editorial roles, given ORCID-only identity. | Yes, for editors: an ORCID affiliation verified by an institution, or confirmation by a chair. Optional for reviewers. |
+| Q13 | What is the generic domain, and which DNS providers host it? | Legal ownership, cost, DNSSEC support, health-check features. | The Foundation registers the domain. Two managed DNS providers with health checks. |
+| Q14 | Which nodes accept independent researchers (no matching institution) as account holders? | Every researcher needs an account node. Institutions may not want to host outsiders. | Each node chooses in its settings. The Foundation makes sure at least 2 nodes accept them. |
+| Q15 | Under which conditions may the Foundation use the escrow key? | Trust of institutions in the partner-copy design. | Only when the institution has left, has lost its recovery key, or asks for it in writing. Dual control, announced to all node admins. To be written into the operator agreement. |
+| Q16 | V2 takeover: what agreement do partners need to hold readable standby copies, and how is the institution's consent given? | Readable copies change the privacy model (NFR-08). | A data processing agreement template from the Foundation. Takeover is opt-in per node. |

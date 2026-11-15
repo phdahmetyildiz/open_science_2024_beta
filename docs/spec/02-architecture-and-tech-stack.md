@@ -12,8 +12,12 @@ flowchart LR
         N2 <--> N3
         N1 <--> N3
     end
-    Researchers((Researchers)) --> N1
-    Visitors((Visitors)) --> N2
+    FrontDoor{{Front door<br/>generic URL, health-checked DNS}}
+    Researchers((Researchers)) --> FrontDoor
+    Visitors((Visitors)) --> FrontDoor
+    FrontDoor --> N1
+    FrontDoor --> N2
+    Researchers -. after sign-in: own node .-> N1
     N1 --> ORCID[ORCID<br/>login]
     N2 --> ORCID
     N3 --> ORCID
@@ -34,7 +38,7 @@ Data falls into three classes, with different storage and replication rules. Thi
 
 | Class | Examples | Storage | Replication | Mutability |
 |---|---|---|---|---|
-| **Transactional (private)** | User sessions, email addresses, drafts, manuscripts under review, invitations, reviews before publication, confidential comments, reports | PostgreSQL on the handling or account node | None. Only encrypted backups. Encrypted standby on a second node in V2. | Mutable |
+| **Transactional (private)** | User sessions, email addresses, drafts, manuscripts under review, invitations, reviews before publication, confidential comments, reports | PostgreSQL on the handling or account node | Not readable anywhere else. Encrypted, restore-only copies on **2 partner nodes** (V1), and automatic takeover by a partner in V2 (03 §11). | Mutable |
 | **Network state (public, small)** | Node membership and keys, admission votes, editorial boards, reviewer-pool profiles, catalog entries (metadata, abstract, full text for search), replica announcements | Signed per-node **feeds**, materialised into PostgreSQL tables on every node | **Every node holds everything** (gossip) | Append-only. Current state is derived from the events. |
 | **Publication content (public, large)** | Rendered HTML, PDF, JATS, source, figures, supplementary files, all versions and review history | **Content-addressed package store** (filesystem or S3-compatible) | **R copies**, placed by rendezvous hashing, plus voluntary mirrors | Immutable. A correction creates a new package. |
 
@@ -112,7 +116,9 @@ PHP (with Laravel) is a reasonable choice for a classic web application. It is e
 - **Federation, gossip, replication and the collaboration server are long-running processes.** PHP's request–response model handles them through extra daemons, which work but add operational complexity.
 - **Scaling isn't the deciding factor.** Each node serves one institution's researchers and readers. The network grows by adding nodes, not by making one node large. PHP, Node.js and Go all scale far beyond what one node needs.
 
-### 4.3 Recommendation: TypeScript throughout, delivered as one container stack
+### 4.3 Decision: TypeScript throughout, delivered as one container stack
+
+Confirmed as D-14 on 2026-11-15. The PDF engine is the only part still open; it is chosen after spike S1.
 
 | Layer | Choice | Reason |
 |---|---|---|
@@ -124,7 +130,7 @@ PHP (with Laravel) is a reasonable choice for a classic web application. It is e
 | Collaboration | **Yjs** with **Hocuspocus** server | CRDT-based real-time collaboration for both editors. MIT licensed. |
 | Math | **KaTeX** (live preview), **Temml** (LaTeX to MathML for HTML/JATS), **MathLive** (visual math input) | Fast, accurate, all JavaScript. |
 | LaTeX parsing | **unified-latex** | Parses LaTeX to an AST, so the subset can be validated and converted. |
-| PDF | **Typst** (embedded CLI), with LaTeX-math-to-Typst conversion (for example via mitex) | Fast, deterministic, sandboxed, a single small binary instead of a 4 GB TeX installation. *To be validated in a Phase-0 spike against HTML-to-PDF (Paged.js plus headless Chromium).* |
+| PDF | **Typst** (embedded CLI), with LaTeX-math-to-Typst conversion (for example via mitex) | Fast, deterministic, sandboxed, a single small binary instead of a 4 GB TeX installation. *Open: compared against HTML-to-PDF (Paged.js plus headless Chromium) in Phase-0 spike S1; the result is recorded here.* |
 | Import (V2) | **Pandoc** | Standard DOCX and LaTeX conversion. |
 | Database | **PostgreSQL** | Relational integrity for the workflow, JSONB for documents and events, built-in full-text search, and the job queue (pg-boss). |
 | ORM / migrations | **Drizzle** or **Prisma** | Typed schema with migrations. |
@@ -164,11 +170,60 @@ The AI features in V2 SHOULD run as a separate Python service behind the AI inte
 ### 5.3 Operations
 
 - **Upgrades**: `osn upgrade` pulls signed release images, takes a database backup, runs migrations and restarts. Releases are signed by the project's release key.
-- **Backups**: a nightly PostgreSQL dump plus a package-store snapshot to a configurable target (local or S3). Restore is documented and tested in CI.
+- **Backups**: two independent layers. (1) The institution's own nightly backup to a target of its choice (local or S3). (2) Continuous encrypted partner copies on 2 other nodes (03 §11). Restoring from either is documented and tested in CI.
 - **Monitoring**: a `/healthz` endpoint, Prometheus metrics, and an admin dashboard showing feed lag per peer, replication health, job queue, disk usage and certificate expiry.
 - **Scaling one node**: the `app` container is stateless apart from the database and package store, so several instances can run behind Caddy if one institution needs it.
 
-## 6. Protocol versioning
+## 6. Front door (generic URL)
+
+Researchers and readers shouldn't have to know which node to visit. The network therefore has one generic URL (D-15), written here as `https://<network-domain>`, for example `openscience.org`.
+
+### 6.1 How it is served
+
+- The **Foundation owns the domain**, just as it owns the DOI prefix. This is one central element, but legally owned and run on many servers, so no single node controls it.
+- A number of **front-door nodes** serve the generic URL. These are ordinary member nodes that volunteer for it, at least 3 in different institutions. A front-door node is a normal node with one extra hostname. It has no extra powers.
+- **DNS** for the domain is a managed DNS service with health checks, run by the Foundation and with a secondary provider. It lists every front-door node whose `/healthz` answers, with a TTL of 60 seconds. A node that stops answering drops out of DNS within 5 minutes (NFR-15).
+- **TLS**: each front-door node gets its own certificate for the generic domain through the ACME DNS-01 challenge. It uses a Foundation-issued API token that can only write `_acme-challenge` records. HTTP-01 doesn't work here, because the challenge could reach a different node.
+- **ORCID**: the Foundation registers one ORCID client for the generic domain, and every front-door node uses it.
+
+### 6.2 What it does
+
+```mermaid
+sequenceDiagram
+    participant U as Researcher
+    participant F as Front-door node (any)
+    participant O as ORCID
+    participant A as Account node
+    U->>F: https://openscience.org (search, read)
+    F-->>U: Served from the local catalog and replicas
+    U->>F: Sign in
+    F->>O: OpenID Connect
+    O-->>F: ORCID iD
+    F->>F: Look up the account directory (03 §10)
+    alt Account exists and its node is reachable
+        F-->>U: Redirect to A with a one-time login token
+        U->>A: Token
+        A-->>U: Session on A's own domain
+    else Account exists but its node is down
+        F-->>U: Status page: "Your node is unavailable since …", reading continues
+    else No account yet
+        F-->>U: Choose your node (suggested: your institution's node)
+        U->>A: Token (chosen node)
+        A-->>U: Account created on A
+    end
+```
+
+1. **Reading and search** need no fixed node. Every node has the whole catalog and can fetch any package from its replicas. The front door serves home, search, landing pages (`/p/{doi}`) and review histories directly.
+2. **Sign-in** happens on the front door with ORCID. The answering node looks up the user's account node in the account directory and redirects to it with a **one-time login token**. The token is signed by the front-door node, valid only for the target node, expires after 60 seconds, and can be used once. The user doesn't have to sign in twice.
+3. From then on, the user stays on **their account node's own domain**. All links in emails and dashboards point to specific node domains (the account node, or the handling node of a manuscript). That's how users get the same node every time: through identity and links, not through load-balancer stickiness.
+4. **First sign-in**: the front door asks the user to choose an account node. It suggests the member node whose institution matches an affiliation on the user's ORCID record (by ROR ID). Researchers with no matching institution can choose any node that accepts independent researchers.
+5. **Account node unreachable**: the front door shows a status page with the time of the outage. Reading and search keep working. Links to manuscripts on *other* handling nodes keep working, because those nodes accept the user's ORCID sign-in directly (03 §10).
+
+### 6.3 DOI resolution
+
+DOIs resolve to `https://<network-domain>/p/{doi}` (04 §7.3). If a node fails, its DOIs keep working right away, because any front-door node can serve any landing page.
+
+## 7. Protocol versioning
 
 - Federation messages carry `protocol: "osn/1"`. Nodes advertise supported versions in `/.well-known/osn`.
 - Event types and fields may be **added** within a major version. Unknown fields MUST be preserved and relayed. Unknown event types MUST be stored and relayed, but not interpreted.
