@@ -34,12 +34,15 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 | UC-A7 | Appeal a rejection | Corresponding author | V1 |
 | UC-A8 | Publish the history of a rejected paper | Corresponding author | V1 |
 | UC-A9 | Import a Word or LaTeX file | Author | V2 |
+| UC-A10 | Write a commentary and reply | Researcher / target's author | V1 |
 | **Editorial** | | | |
 | UC-E1 | Accept an editor assignment | Editor | V1 |
 | UC-E2 | Perform the formal check | Editor (V2: AI-assisted) | V1 |
 | UC-E3 | Find and invite reviewers | Editor | V1 |
 | UC-E4 | Make a decision | Editor | V1 |
 | UC-E5 | Manage a board | Board chair | V1 |
+| UC-E6 | Add a co-editor for an interdisciplinary paper | Handling editor | V1 |
+| UC-E7 | Issue an editorial notice | Board chair / editor | V1 |
 | **Review** | | | |
 | UC-R1 | Respond to a review invitation | Reviewer | V1 |
 | UC-R2 | Write a review with AI suggestions | Reviewer | V1 (stub) |
@@ -61,8 +64,8 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 - **Preconditions:** node installed (02 §5). The Foundation exists, and its Crossref prefix and credentials are available.
 - **Main flow:**
   1. The admin chooses *Create a new network* in the console.
-  2. The admin enters the network name, the parameters (Q = 10, R = 5, and the others in 03 §5.1), the initial field taxonomy (OECD FORD) and the initial board chairs (ORCID iDs) designated by the Foundation.
-  3. The node appends `Genesis`, `FieldDefined` and `EditorAppointed` (chairs) events to its feed.
+  2. The admin enters the network name and the parameters (Q = 10, R = 5, and the others in 03 §5.1). The taxonomy is the pinned OpenAlex copy shipped with the release (12 §1.2), so it isn't entered. The admin defines the founding boards, by default one per OpenAlex field, possibly merged (12 §3.1), and enters their initial chairs (ORCID iDs) as designated by the Foundation.
+  3. The node appends `Genesis`, `BoardDefined` and `EditorAppointed` (chairs) events to its feed.
   4. The node is the network's only member and is fully operational.
 - **Result:** a network with one member. Its ID is the hash of the genesis event.
 - **Exceptions:** genesis can only be done once per installation. A node that has joined a network can't create another.
@@ -174,13 +177,13 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 
 ### UC-U2 Maintain profile and join the reviewer pool
 
-- **Main flow:** the researcher edits their profile (bio, fields, keywords, languages, links). They enable *Available as reviewer* and set a capacity (for example 2 reviews per quarter). The account node publishes `ReviewerProfile` (public data only). The researcher can pause their availability or withdraw from the pool at any time (`ReviewerProfileWithdrawn`).
+- **Main flow:** the researcher edits their profile: bio, topics (prefilled from their OpenAlex author record, 12 §5), keywords, languages, links, an optional native-script name, and their UI language (English, German or French in V1). They enable *Available as reviewer* and set a capacity (for example 2 reviews per quarter). The account node publishes `ReviewerProfile` (public data only). The researcher can pause their availability or withdraw from the pool at any time (`ReviewerProfileWithdrawn`).
 - **Result:** the researcher appears in reviewer search on every node.
 
 ### UC-U3 Report a user
 
 - **Actor:** any signed-in researcher.
-- **Main flow:** on a profile, review or manuscript page, the researcher chooses *Report*, picks a category (false identity or affiliation, misconduct, harassment, other), and adds a description and evidence. The report goes to the reported person's account node, through the inbox if that's another node. If it relates to a manuscript, it also goes to the board chairs of the field.
+- **Main flow:** on a profile, review or manuscript page, the researcher chooses *Report*, picks a category (false identity or affiliation, misconduct, harassment, other), and adds a description and evidence. The report goes to the reported person's account node, through the inbox if that's another node. If it relates to a manuscript, it also goes to the chairs of the responsible board.
 - **Result:** an open report case. The reporter receives an acknowledgement. The reported person is not told who reported them.
 
 ### UC-U4 Handle a user report
@@ -191,7 +194,7 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 
 ### UC-U5 Apply to become an editor
 
-- **Main flow:** the researcher selects a field and submits a statement. The board chairs see the ORCID record, publications and review history in the network. A chair (or 2 editors) approves, and `EditorAppointed` is published. Otherwise the application is declined with a reason.
+- **Main flow:** the researcher selects a board, declares the topics and languages they can handle, and submits a statement. The board chairs see the ORCID record, publications and review history in the network. A chair (or 2 editors) approves, and `EditorAppointed` is published. Otherwise the application is declined with a reason.
 
 ## Authoring and submission
 
@@ -199,7 +202,7 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 
 - **Actor:** researcher, who becomes the corresponding author.
 - **Main flow:**
-  1. *New manuscript*: choose the article type (research article, review, short communication …), the authoring mode (rich text or LaTeX), and the primary field.
+  1. *New manuscript*: choose the publication type (12 §6.2), the authoring mode (rich text or LaTeX), the primary topic and optionally up to 4 additional topics, using the topic picker with suggestions (12 §2). The language is English in V1. The section template of the type is created (06 §2.1).
   2. The manuscript is created on the researcher's account node, which becomes its **handling node**.
   3. The author invites co-authors by ORCID iD or email. They receive an invitation and sign in with ORCID on the handling node to accept it.
 - **Result:** a draft shared with the co-authors.
@@ -248,12 +251,22 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 
 - The author uploads a DOCX file or a LaTeX zip. The system converts it (06 §9), creates a draft and shows the import report. The author fixes the reported problems in the editor.
 
+### UC-A10 Write a commentary and reply
+
+- **Actors:** researcher (commentary author). Corresponding author of the target publication (reply author).
+- **Main flow:**
+  1. On a publication's landing page, or for any DOI, the researcher chooses *Write a commentary*. A manuscript of type *commentary* is created, linked to the target DOI (12 §6.4).
+  2. The researcher writes and submits it as in UC-A2 and UC-A3. The responsible board is the board of the target's primary topic, if the target is a network publication.
+  3. If the target is a network publication, its corresponding author is invited to write a **reply** once the commentary has passed the formal check. The reply is handled by the same editor.
+  4. If both are accepted, they are published together and linked. The target's landing page lists them.
+- **Alternatives:** the target's author doesn't reply within the deadline (default 30 days). The commentary is published alone, with a note that a reply was invited.
+
 ## Editorial
 
 ### UC-E1 Accept an editor assignment
 
-- **Actor:** an editor of the manuscript's primary field.
-- **Main flow:** the editor receives an invitation (title, abstract, fields, and the reason they were chosen). They sign in to the handling node, confirm they have no conflict, and accept. The state becomes *Formal check*.
+- **Actor:** an editor of the manuscript's responsible board.
+- **Main flow:** the editor receives an invitation (title, abstract, type, topics, and the reason they were chosen). They sign in to the handling node, confirm they have no conflict, and accept. The state becomes *Formal check*.
 - **Alternatives:** the editor declines with a reason, and the next candidate is asked (05 §5). After 3 declines, the board chairs assign someone.
 
 ### UC-E2 Perform the formal check
@@ -264,9 +277,9 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 ### UC-E3 Find and invite reviewers
 
 - **Main flow:**
-  1. The editor opens the reviewer search: a recommendation list, filters for field, keyword, language, availability and eligibility, and author-suggested reviewers marked as such.
+  1. The editor opens the reviewer search: a recommendation list covering the primary and additional topics, filters for topic, keyword, language, availability and eligibility, and author-suggested reviewers marked as such.
   2. Conflicts are excluded automatically, with the reason shown (05 §7).
-  3. The editor selects reviewers (at least the board minimum), adjusts the deadline and sends invitations.
+  3. The editor selects reviewers (at least the minimum for the publication type), adjusts the deadline and sends invitations.
   4. The invitations reach the reviewers' account nodes through the inbox (03 §9).
 - **Alternatives:** an invitation is declined or expires. The editor is notified and invites a replacement, possibly someone the declining reviewer suggested.
 
@@ -278,7 +291,25 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 ### UC-E5 Manage a board
 
 - **Actor:** board chair.
-- **Main flow:** appoint and remove editors (UC-U5), reassign stuck manuscripts, set board policies (minimum reviews, deadlines, eligibility rule, citation style), define sub-fields, decide appeals and integrity cases, and view board statistics (load, turnaround, overdue steps).
+- **Main flow:** appoint and remove editors (UC-U5), reassign stuck manuscripts, set board policies (minimum reviews, deadlines, eligibility rule, citation style, enabled publication types, length guidelines), define sub-topics below OpenAlex topics, split off or merge board scopes with the chairs of the other board (12 §3.1), issue editorial notices (UC-E7), decide appeals and integrity cases, and view board statistics (load, turnaround, overdue steps).
+
+### UC-E6 Add a co-editor for an interdisciplinary paper
+
+- **Actor:** handling editor.
+- **Preconditions:** the manuscript has additional topics belonging to another board. No decision has been made yet.
+- **Main flow:**
+  1. The editor chooses *Add co-editor*. The system lists the boards of the additional topics and proposes editors from them, ranked by topic match and excluding conflicts (05 §7).
+  2. The editor sends the invitation. The co-editor accepts or declines, as in UC-E1.
+  3. The co-editor gets the same visibility as the handling editor, can invite reviewers, and gives a recommendation before each decision (12 §4).
+- **Exceptions:** at most 2 co-editors. If a co-editor disagrees with the final decision, their note is recorded and published with the history of an accepted paper.
+
+### UC-E7 Issue an editorial notice
+
+- **Actors:** board chair (editorial, expression of concern, retraction). Handling editor or chair (correction).
+- **Main flow:**
+  1. The issuer creates a notice of the right type (12 §6.3), linked to the affected publication where applicable.
+  2. A second editor or chair of the same board checks it and approves it. There is no peer review.
+  3. The notice is published with its own DOI, labelled "Not peer reviewed". For corrections, expressions of concern and retractions, the affected publication's status changes (UC-P5), and Crossref's update metadata links the two.
 
 ## Review
 
@@ -318,7 +349,7 @@ Each use case lists actors, preconditions, the main flow, alternatives and excep
 ### UC-P3 Find, read and cite a publication
 
 - **Actor:** visitor.
-- **Main flow:** the visitor searches on any node (full text, filters for field, date, author and status), or arrives through a DOI or search engine. They read the HTML version, download the PDF or JATS, and export a citation.
+- **Main flow:** the visitor searches on any node (full text, filters for topic at any taxonomy level, publication type, date, author and status) or browses topic pages, or arrives through a DOI or search engine. They read the HTML version, download the PDF or JATS, and export a citation.
 - **Alternatives:** the node has no local copy. It fetches the package from a replica and caches it, which is invisible to the reader apart from slightly longer loading.
 
 ### UC-P4 Read the review history

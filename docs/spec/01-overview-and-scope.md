@@ -36,12 +36,12 @@ The **Open Science Network** is "one journal for all". It is a single scholarly 
 | Co-author | Researcher invited to a manuscript | Edit, comment, confirm authorship before submission. |
 | Reviewer | Researcher in the reviewer pool | Accept or decline invitations, write reviews, rate AI suggestions. |
 | Handling editor | Board member assigned to a manuscript | Formal check, invite reviewers, make decisions. |
-| Board chair | Lead of a field board | Appoint editors, handle appeals, reassign manuscripts, oversee integrity cases. |
+| Board chair | Lead of an editorial board | Appoint editors, handle appeals, reassign manuscripts, oversee integrity cases. |
 | Node administrator | Staff of the institution running a node | Install and operate the node, vote on admissions, handle user reports. |
 | Node | The software installation (system actor) | Sign events, replicate feeds and publications, serve content. |
 | Foundation | Legal entity | Holds the DOI prefix, ISSN and Crossref account; issues credentials to nodes; signs contracts with archives. |
 
-One person can hold several roles. Roles are always scoped: for example, an editor role applies to a field, and an author role to a manuscript.
+One person can hold several roles. Roles are always scoped: for example, an editor role applies to a board, a co-editor role to one manuscript, and an author role to a manuscript.
 
 ## 5. Scope by release
 
@@ -56,7 +56,11 @@ One person can hold several roles. Roles are always scoped: for example, an edit
 - Real-time collaboration between co-authors.
 - The full editorial workflow with a human editor: formal check, reviewer invitation, review, decision, revisions, appeal.
 - Review assistant interface with a stub that returns zero suggestions, plus the feedback data model.
-- Simple, non-AI reviewer recommendation based on fields and keyword overlap.
+- Simple, non-AI reviewer recommendation based on topic match, keyword overlap and languages.
+- UI in English, German and French, ready for right-to-left languages (D-17, 11).
+- Papers in English only, with text in any script supported inside them (names, quotations, terms) (D-17).
+- OpenAlex topic taxonomy, boards per subfield set, multi-topic papers and co-editors (D-18, D-19, 12).
+- Publication types: research article, review article, commentary, case report, data paper, software paper, plus editorial notices (D-20).
 - Production: rendering to HTML, PDF and JATS; author proofs; DOI registration through the Foundation's Crossref account.
 - Publication packages, replication with R copies, storage audits and repair.
 - A public reading site on every node: landing pages, search across the whole catalog, full review history, citation export.
@@ -69,13 +73,16 @@ One person can hold several roles. Roles are always scoped: for example, an edit
 - DOIs for individual peer-review reports.
 - Writing publications to authors' ORCID records (needs ORCID membership).
 - Similarity and plagiarism check (Crossref Similarity Check).
-- Automatic takeover of a failed node's users and manuscripts by a partner node, so an outage doesn't stall reviews (D-16, 03 §11.6).
+- Automatic takeover of a failed node's users and manuscripts by a partner node, so an outage doesn't stall reviews (D-16, 03 §11.7).
+- Papers in other languages, translated abstracts, language-aware search, and more UI languages including the first right-to-left UI (11 §1).
+- AI topic suggestions for manuscripts.
+- Further publication types: letter, perspective, methods/protocol, replication study (12 §6.7).
 - Changing network parameters by vote. Optionally, network-level node suspension (see 10).
 - Track changes in the editors.
 
 ### V3
 
-- Datasets and software as publication types.
+- Registered reports, with two-stage review (12 §6.7).
 - Post-publication commentary and community review.
 - Indexing applications (DOAJ, Scopus, PubMed Central) and usage metrics (COUNTER).
 - Federated or central training of the AI models.
@@ -102,7 +109,7 @@ One person can hold several roles. Roles are always scoped: for example, an edit
 | NFR-14 | Recoverability | If a node is lost completely, its private data MUST be restorable from a partner copy with at most 15 minutes of data loss. |
 | NFR-15 | Front door | The generic URL MUST stay reachable as long as at least one front-door node is healthy. Unhealthy nodes MUST drop out of DNS within 5 minutes. |
 | NFR-09 | Accessibility | The UI MUST meet WCAG 2.1 AA. Published HTML MUST use MathML. PDFs SHOULD be tagged. |
-| NFR-10 | Internationalisation | The UI MUST be translatable; English and German ship in V1. |
+| NFR-10 | Internationalisation | The UI MUST be fully translatable and right-to-left ready. English, German and French ship in V1. Every component MUST store, edit, render and search text in any Unicode script (11 §4). |
 | NFR-11 | Upgradability | Nodes MUST interoperate as long as they are within one major protocol version of each other. Upgrades MUST be applicable without downtime longer than 5 minutes. |
 | NFR-12 | Observability | Each node MUST expose health, metrics and federation status to its administrator. |
 | NFR-13 | Openness | All code MUST be open source (A-03). Protocols and formats MUST be documented, so independent implementations are possible. |

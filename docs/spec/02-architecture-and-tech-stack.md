@@ -93,7 +93,7 @@ flowchart TB
 | Rendering service | Deterministic conversion of the document model to HTML, PDF and JATS. Runs sandboxed. The renderer version is recorded in each package. |
 | Federation service | Holds the node keys, signs and publishes feed events, syncs feeds with peers, verifies incoming events, maintains derived tables, and runs the signed inbox for targeted messages. |
 | Replication service | Computes placement, fetches and verifies packages, announces replicas, runs storage audits and repairs. |
-| Search | PostgreSQL full-text search over the whole catalog, with language-specific configurations. An external engine is optional at scale. |
+| Search | PostgreSQL full-text search over the whole catalog, plus trigram indexes for titles and names in any script (11 §8). From V2, an external engine with language-aware analysis for non-English full texts. |
 | Job queue | Background jobs (pg-boss, which runs on PostgreSQL, so no separate broker is needed). |
 | AI interfaces | `FormalCheckService`, `ReviewerRecommender` and `ReviewAssistant`. V1 ships the stub or simple implementations (see 05 §8). |
 | DOI service | Builds Crossref deposit XML from the package manifest, submits it, and tracks the result. |
@@ -132,6 +132,9 @@ Confirmed as D-14 on 2026-11-15. The PDF engine is the only part still open; it 
 | LaTeX parsing | **unified-latex** | Parses LaTeX to an AST, so the subset can be validated and converted. |
 | PDF | **Typst** (embedded CLI), with LaTeX-math-to-Typst conversion (for example via mitex) | Fast, deterministic, sandboxed, a single small binary instead of a 4 GB TeX installation. *Open: compared against HTML-to-PDF (Paged.js plus headless Chromium) in Phase-0 spike S1; the result is recorded here.* |
 | Import (V2) | **Pandoc** | Standard DOCX and LaTeX conversion. |
+| Localisation | **FormatJS** (ICU MessageFormat), the `Intl` API, **Weblate** for translations | One message format for frontend and server-side emails. Weblate is open source and suits community translation (11 §3). |
+| Fonts | **Noto** font families (all scripts), with CJK fonts as a separate container layer | Consistent coverage of every script in the UI, HTML and PDF (11 §7). |
+| Taxonomy | Pinned copy of **OpenAlex Topics** (CC0) as a data file in each release | No run-time dependency on an external service (12 §1.2). |
 | Database | **PostgreSQL** | Relational integrity for the workflow, JSONB for documents and events, built-in full-text search, and the job queue (pg-boss). |
 | ORM / migrations | **Drizzle** or **Prisma** | Typed schema with migrations. |
 | Package store | Local filesystem by default, any **S3-compatible** store optionally | Simple default. Institutions with object storage can plug it in. |

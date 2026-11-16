@@ -6,22 +6,22 @@ The workflow follows the usual journal process, with three differences: editors 
 
 All workflow data for a manuscript lives on its **handling node**, which is the node where the corresponding author created it. Editors, reviewers and co-authors from other nodes sign in there with ORCID (03 §10). Notifications reach them through their account nodes (03 §9). If the handling node is unavailable, the manuscript waits and its deadlines are extended afterwards (03 §11.5).
 
-## 2. Fields and editorial boards
+## 2. Topics, boards and publication types
 
-### 2.1 Taxonomy
+### 2.1 Taxonomy and topics
 
-- The initial taxonomy is the OECD FORD classification, two levels (for example *1 Natural sciences*, then *1.2 Computer and information sciences*) (A-05). It is defined by `FieldDefined` events in the genesis node's feed.
-- A board chair of a field can add sub-fields (`FieldDefined` with a parent).
-- A manuscript has one primary field (which decides the board) and up to three secondary fields (used for reviewer matching).
+- Topics come from the OpenAlex taxonomy (domain › field › subfield › topic), as specified in 12 §1.
+- A manuscript has **one primary topic** and up to 4 additional topics. The primary topic's subfield decides the **responsible board** (12 §2–3).
+- Each manuscript has one **publication type** (12 §6). The type decides the required sections and declarations, formal-check items, review questions and default minimum reviews.
 
 ### 2.2 Board roles
 
 | Role | Appointed by | Responsibilities |
 |---|---|---|
-| Board chair (1–3 per field) | Bootstrap: the Foundation's designated chairs. Later: the other chairs of the field, or the chairs of the parent field. | Appoint and remove editors, handle appeals and integrity cases, reassign manuscripts, set board policies (minimum reviews, citation style, deadlines). |
-| Editor | A board chair, or 2 existing editors of the field | Handle manuscripts. |
+| Board chair (1–3 per board) | Bootstrap: the Foundation's designated chairs. Later: the other chairs of the board. | Appoint and remove editors, handle appeals and integrity cases, reassign manuscripts, set board policies (minimum reviews, citation style, deadlines, enabled publication types), define sub-topics, split or merge board scopes (12 §3.1). |
+| Editor | A board chair, or 2 existing editors of the board | Handle manuscripts as handling editor, or as co-editor for another board (12 §4). |
 
-- Researchers can apply to become editors of a field. The application shows their ORCID record and publications to the chairs.
+- Researchers can apply to become editors of a board. They declare the topics and languages they can handle (12 §3.2). The application shows their ORCID record and publications to the chairs.
 - Appointment and removal are `EditorAppointed` / `EditorRemoved` events in the feed of the approver's account node. Each event names the approving chair or editors. Every node checks the event: the approvers must have held the required role at the time, according to earlier events.
 - Board membership, policies and editor load are public.
 
@@ -67,20 +67,25 @@ Every transition is recorded in the manuscript's timeline with actor, time and r
 Before a manuscript can be submitted, the system checks that:
 
 - every co-author has confirmed their authorship and contributor roles (by signing in with ORCID and confirming);
-- required metadata is complete: title, English abstract and keywords (A-07), fields, licence (A-02), funding, competing interests, data availability statement and ethics statement where applicable;
-- the document passes **structural validation**: required sections, every figure and table has a caption and alt text, every citation resolves to a reference, cross-references resolve, and the renderer produces HTML and PDF without errors;
+- required metadata is complete: English title, abstract and keywords (11 §5.1), primary and additional topics, publication type, licence (A-02), funding, competing interests, data availability statement and ethics statement where applicable;
+- the **type-specific requirements** are met (12 §6.2): for example the target DOI of a commentary, the consent statement of a case report, or the dataset or software DOI of a data or software paper, which must resolve;
+- the paper's language is **English** (V1, D-17);
+- the publication type is enabled by the responsible board;
+- the document passes **structural validation**: required sections for the type, every figure and table has a caption and alt text, every citation resolves to a reference, cross-references resolve, and the renderer produces HTML and PDF without errors;
 - the author has accepted the transparency terms, which state that the review history will be published if the paper is accepted.
 
 On submission, the current document is frozen as **version 1**. The authors can keep editing a working copy, but the editor and reviewers only see frozen versions.
 
 ## 5. Editor assignment
 
-1. The system proposes an editor from the board of the primary field:
+1. The system proposes an editor from the **responsible board** (the board of the primary topic's subfield):
    - excluding conflicts (§7);
-   - ranked by keyword overlap with the manuscript, then by lowest current load, then randomly.
-2. The proposed editor receives an inbox invitation with title, abstract and fields. The editor accepts within 3 days, or declines with a reason.
+   - ranked by topic match (editors who declared the primary topic, then the same subfield, then the rest of the board, 12 §3.2), then keyword overlap, then lowest current load, then randomly;
+   - [V2] for non-English papers, only editors who read the paper's language, unless a co-editor covers it (11 §9).
+2. The proposed editor receives an inbox invitation with title, abstract, type and topics. The editor accepts within 3 days, or declines with a reason.
 3. If they decline or don't answer in time, the next candidate is asked. After 3 failed attempts, the board chairs are notified and assign someone manually.
 4. Board chairs can reassign a manuscript at any time, with a recorded reason.
+5. For interdisciplinary papers, the handling editor can add up to 2 **co-editors** from the boards of the additional topics (12 §4).
 
 [V2] The AI editor proposes the editor and the reviewers. The editor remains a human who confirms.
 
@@ -90,8 +95,10 @@ The handling editor works through a checklist. In V2 the AI formal check pre-fil
 
 | Check | Example findings |
 |---|---|
-| Scope | Fits the field, is scholarly work. |
-| Structure | Required sections present for the article type. Abstract within the word limit. |
+| Scope | Fits the responsible board, is scholarly work. |
+| Classification | Publication type and topics are correct. The editor can change them, with a reason (12 §2). |
+| Structure | Required sections present for the publication type. Abstract within the word limit. |
+| Type-specific items | For example the PRISMA checklist for systematic reviews, consent for case reports, repository checks for data and software papers (12 §6.4). |
 | Language | Readable enough for review. |
 | References | Plausible, resolvable DOIs, no obvious citation manipulation. |
 | Figures and tables | Legible, captioned, alt text present, licensed. |
@@ -115,16 +122,16 @@ Detected conflicts block the invitation. Self-declared conflicts lead to an auto
 
 ### 8.1 Pool and eligibility
 
-- Researchers opt in to the pool on their profile, choosing fields, keywords, languages and availability (`ReviewerProfile`).
+- Researchers opt in to the pool on their profile, choosing topics (prefilled from OpenAlex, 12 §5), keywords, languages and availability (`ReviewerProfile`).
 - Because identity is ORCID only (D-05), each board sets an **eligibility rule**. The default: the ORCID record lists at least one work with a DOI whose source is a trusted organisation (for example Crossref auto-update), and the ORCID account is older than 6 months. The editor can override the rule for a specific invitation, with a reason.
 - The editor sees eligibility signals for each candidate: account age, works, verified affiliations, past reviews in the network, and any open reports.
 - Author-suggested reviewers are allowed and are marked as such. At least one reviewer per round MUST NOT be author-suggested.
 
 ### 8.2 Invitation
 
-1. The editor searches the pool. A recommendation list is shown, ranked by field and keyword overlap, reviewing history and current load (`ReviewerRecommender`). This is a simple non-AI algorithm in V1 and AI-based in V2.
-2. The editor invites at least as many reviewers as the board's minimum (default 2, A-06), typically 3.
-3. The invitation shows the title, abstract, fields, deadline (default 21 days) and the transparency terms. It explains that the reviewer's name and report will be published if the paper is accepted.
+1. The editor searches the pool. A recommendation list is shown, ranked by topic match across the primary and additional topics (12 §5), then keyword overlap, languages, reviewing history and current load (`ReviewerRecommender`). This is a simple non-AI algorithm in V1 and AI-based in V2.
+2. The editor invites at least as many reviewers as the minimum for the publication type (12 §6.2), which the board can raise. Typically that means 3 invitations.
+3. The invitation shows the title, abstract, type, topics, deadline (default 21 days) and the transparency terms. It explains that the reviewer's name and report will be published if the paper is accepted.
 4. The reviewer **accepts** or **declines**. A decline asks for a reason (no time, out of expertise, conflict, other) and optionally suggests an alternative reviewer.
 5. Without an answer within 5 days, the invitation expires and the editor is notified.
 6. Reminders go out 7 days and 2 days before the deadline. Reviewers can ask for an extension, which the editor approves or rejects.
@@ -136,6 +143,7 @@ Detected conflicts block the invitation. Self-declared conflicts lead to an auto
 | Summary | The reviewer's summary of the paper and its contribution | Yes | Yes |
 | Points | Numbered points, each with a category (major, minor, typo/language), a text, and optionally an anchor to a location in the manuscript | Yes | Yes |
 | AI suggestions | Suggestions from `ReviewAssistant` with the reviewer's verdict and explanation (§8.4) | Accepted ones appear as points | Yes, all with verdicts |
+| Type-specific questions | Questions defined for the publication type (12 §6.5) | Yes | Yes |
 | Recommendation | Accept, minor revision, major revision, reject | Yes | Yes |
 | Confidential comments | Ethics and conflict concerns for the editor only (A-10) | No | No |
 
@@ -143,7 +151,7 @@ The reviewer reads the frozen version in an HTML viewer, with the PDF available,
 
 ### 8.4 AI review assistant
 
-- Interface: `ReviewAssistant.suggest(manuscriptVersion, field, reviewerContext) → Suggestion[]`. A suggestion has an anchor, a category, a text, a rationale and a model version.
+- Interface: `ReviewAssistant.suggest(manuscriptVersion, publicationType, topics, language, reviewerContext) → Suggestion[]`. A suggestion has an anchor, a category, a text, a rationale and a model version.
 - **V1: the stub returns an empty list.** The UI panel exists and shows "No suggestions", so V2 needs no UI change.
 - For each suggestion the reviewer MUST choose **accept** or **reject**, and MUST write a short explanation (at least 10 characters). Accepted suggestions become review points, which the reviewer can edit.
 - The verdict and explanation are stored as `SuggestionFeedback` and used as training data in V2. For accepted papers, the feedback is published with the review history. For rejected papers, it stays private and is used for training only if the reviewer consented.
@@ -151,7 +159,7 @@ The reviewer reads the frozen version in an HTML viewer, with the PDF available,
 ## 9. Decisions
 
 1. When the minimum number of reviews is complete, the manuscript moves to *awaiting decision*. The editor can also wait for further reviews.
-2. The editor chooses **accept**, **minor revision**, **major revision** or **reject**, and writes a decision letter. The letter is prefilled with all reviews.
+2. The editor chooses **accept**, **minor revision**, **major revision** or **reject**, and writes a decision letter. The letter is prefilled with all reviews. If co-editors are involved, their recommendations are collected first (12 §4).
 3. If the decision goes against the majority of reviewer recommendations, the editor MUST write a justification. It is part of the public record.
 4. The author receives the decision letter and all reviews, without reviewer names (D-04).
 
@@ -191,7 +199,7 @@ An author can appeal a rejection **once**, within 30 days, with a written statem
 | AI suggestions and verdicts | Yes | No | Yes |
 | Author responses | Yes | No | Yes |
 | Decision letters, justifications | Yes | No | Yes |
-| Editor name | Yes | No | Yes |
+| Editor and co-editor names, co-editor recommendations | Yes | No | Yes |
 | Timeline (dates of all steps) | Yes | No | Yes |
 | Declined invitations | Only counts | No | Only counts |
 | Confidential comments | Never | Never | Never |

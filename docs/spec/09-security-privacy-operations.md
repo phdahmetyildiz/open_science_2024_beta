@@ -36,9 +36,9 @@
 |---|---|---|---|---|---|---|---|
 | Read publications and histories | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Edit manuscript M | | | ✓ (before submission and during revisions) | | | | |
-| See frozen versions of M | | | ✓ | ✓ | ✓ (from invitation acceptance) | ✓ (field) | |
-| See reviewer identities of M | | | | ✓ | Own only | ✓ (field) | |
-| See confidential comments | | | | ✓ | Own only | ✓ (field) | |
+| See frozen versions of M | | | ✓ | ✓ (and co-editors) | ✓ (from invitation acceptance) | ✓ (responsible board) | |
+| See reviewer identities of M | | | | ✓ (and co-editors) | Own only | ✓ (responsible board) | |
+| See confidential comments | | | | ✓ (and co-editors) | Own only | ✓ (responsible board) | |
 | Invite reviewers / decide | | | | ✓ | | ✓ (reassign, appeals) | |
 | Write review | | | | | ✓ | | |
 | Manage board | | | | | | ✓ | |

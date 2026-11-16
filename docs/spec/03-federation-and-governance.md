@@ -78,7 +78,8 @@ Each node appends a `Heartbeat` event at least every 24 hours. Its payload inclu
 | `KeyRotation` | The node | New key, signed with the old key. |
 | `KeyRecovery` | A member, for another node | Approves a replacement key after loss or compromise (same quorum as admission). |
 | `NodeRetired` | The node | Leaves the network voluntarily. |
-| `FieldDefined` | Any node with a board chair of the parent field (genesis for the initial taxonomy) | Adds a field to the taxonomy. |
+| `BoardDefined` / `BoardScopeChanged` | Account node of a board chair (genesis for the founding boards) | Creates a board, or changes the set of subfields it covers (12 §3.1). |
+| `TopicExtensionDefined` | Account node of a chair of the responsible board | Adds a board-defined sub-topic below an OpenAlex topic (12 §1.2). |
 | `EditorAppointed` / `EditorRemoved` | The node of an approving board chair or editor | Editorial board membership (see 05 §2). |
 | `ReviewerProfile` | A researcher's account node | Public reviewer-pool profile, or an update to it. |
 | `ReviewerProfileWithdrawn` | Account node | Leaves the reviewer pool. |
@@ -189,8 +190,8 @@ Following D-09, the network can't expel a node. The remaining remedies are:
 
 Besides membership, two directories are replicated to every node through feeds:
 
-- **Reviewer pool.** `ReviewerProfile` events published by a researcher's account node contain the ORCID iD, display name, fields, keywords, affiliations (from ORCID), languages, an availability flag and a coarse current-load bucket (0, 1–2, 3 or more). Email addresses are **not** included. Invitations go through the signed inbox (§9) to the account node, which emails the researcher.
-- **Editorial boards.** `FieldDefined`, `EditorAppointed` and `EditorRemoved` events (see 05 §2).
+- **Reviewer pool.** `ReviewerProfile` events published by a researcher's account node contain the ORCID iD, display name (with an optional native-script name), topics (prefilled from OpenAlex, 12 §5), keywords, affiliations (from ORCID), languages, an availability flag and a coarse current-load bucket (0, 1–2, 3 or more). Email addresses are **not** included. Invitations go through the signed inbox (§9) to the account node, which emails the researcher.
+- **Editorial boards and taxonomy extensions.** `BoardDefined`, `BoardScopeChanged`, `TopicExtensionDefined`, `EditorAppointed` and `EditorRemoved` events (see 05 §2 and 12 §3). The taxonomy itself isn't in the feeds. It ships with the software as a pinned data file (12 §1.2).
 
 ## 9. Signed inbox (targeted messages)
 

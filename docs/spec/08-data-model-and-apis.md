@@ -32,11 +32,12 @@ erDiagram
 
 | Entity | Key attributes |
 |---|---|
-| `account` | ORCID iD (unique), display name, verified email, language, notification settings, created, status (active, suspended) |
+| `account` | ORCID iD (unique), display name, native-script name (optional, with language tag), verified email, UI language, notification settings, created, status (active, suspended) |
 | `guest_session` | ORCID iD, account node ID, expiry. Used for researchers from other nodes. |
-| `reviewer_settings` | Enabled, capacity per quarter, paused until, fields, keywords, languages (published as `ReviewerProfile`) |
-| `manuscript` | ID, article type, authoring mode, primary and secondary fields, state, corresponding author, working document (Yjs state plus SDM), metadata (title, abstract, keywords, funding, declarations, licence), created |
-| `authorship` | Manuscript, ORCID iD, order, affiliations (with ROR IDs), CRediT roles, confirmed at |
+| `reviewer_settings` | Enabled, capacity per quarter, paused until, topics, keywords, languages (published as `ReviewerProfile`) |
+| `manuscript` | ID, publication type (and subtype), authoring mode, language (BCP 47), taxonomy version, primary topic, additional topics, sub-topics, responsible board, related DOIs (commentary target, dataset, software), state, corresponding author, working document (Yjs state plus SDM), metadata (title, abstract and keywords as language-tagged maps, funding, declarations, type-specific declarations, licence), created |
+| `authorship` | Manuscript, ORCID iD, order, native-script name, affiliations (with ROR IDs), CRediT roles, confirmed at |
+| `co_editor_assignment` | Manuscript, co-editor ORCID iD, board, invited, accepted or declined, recommendation per round, disagreement note |
 | `manuscript_version` | Manuscript, version number, frozen SDM, source, rendered HTML/PDF, content hash, submitted at |
 | `reference` | Manuscript, key, CSL-JSON, DOI |
 | `asset` | Manuscript, file path in the store, hash, media type, alt text, rights confirmed |
@@ -44,7 +45,7 @@ erDiagram
 | `formal_check` | Manuscript version, checklist results, findings, outcome, AI findings (V2) |
 | `round` | Manuscript, number, version, opened, closed |
 | `invitation` | Round, reviewer ORCID iD, author-suggested flag, sent, response, decline reason, suggested alternative, deadline, extensions |
-| `review` | Round, reviewer ORCID iD, summary, recommendation, confidential comment, submitted at |
+| `review` | Round, reviewer ORCID iD, language, summary, answers to type-specific questions, recommendation, confidential comment, submitted at |
 | `review_point` | Review, number, category, text, anchor (SDM node ID plus text range), origin (reviewer, AI suggestion) |
 | `ai_suggestion` | Review, model version, anchor, category, text, rationale |
 | `suggestion_feedback` | Suggestion, verdict (accept or reject), explanation, training consent |
@@ -63,7 +64,8 @@ erDiagram
 | `feed_event` | All verified events, raw (ID, feed, seq, type, payload, signature) |
 | `node` | `Genesis`, admission rule, `Heartbeat`, `KeyRotation`, `KeyRecovery`, `NodeEndpointChanged`, `NodeRetired`. Columns: node ID, code, domain, keys, institution, member since, active or dormant, capacity, local trust status |
 | `application` | `AdmissionApplication`, approvals, rejections, withdrawals, computed status |
-| `field` | `FieldDefined` |
+| `board` | `BoardDefined`, `BoardScopeChanged`: board ID, name (per language), subfields covered, policies, enabled publication types |
+| `topic_extension` | `TopicExtensionDefined`: ID (`osn:` prefix), parent OpenAlex topic, labels per language |
 | `board_role` | `EditorAppointed` / `EditorRemoved`, with validity periods |
 | `reviewer_directory` | `ReviewerProfile` / `ReviewerProfileWithdrawn`, plus pool-suspension outcomes from UC-U4 |
 | `catalog` | `PublicationPublished`: DOI, versions, metadata, abstract, plain text, `tsvector` for search |
@@ -73,6 +75,8 @@ erDiagram
 | `partner` | `PartnerAgreement`, `PartnerAgreementEnded`, `PartnerCopyStatus`: source node, partner node, since, last copy, integrity status |
 
 These tables are caches. They can be rebuilt by replaying `feed_event`.
+
+**Reference data shipped with each release** (not in feeds): the pinned OpenAlex taxonomy with its version and the mapping files between versions (12 §1.2), the publication type registry (12 §6.1), taxonomy and type labels per language, and the house-style label sets per content language (11 §5.2).
 
 ## 3. Formats
 
@@ -128,9 +132,12 @@ REST over HTTPS, JSON, described with OpenAPI 3.1, authenticated by session cook
 | `/api/v1/manuscripts/{id}/rounds/{n}/decision` | Make decision |
 | `/api/v1/manuscripts/{id}/proofs` | Get, annotate, approve |
 | `/api/v1/reviewers` | Search the directory (with eligibility and COI for a given manuscript) |
-| `/api/v1/boards/{field}` | Board info, apply as editor, appoint or remove (chair), policies |
+| `/api/v1/boards/{boardId}` | Board info, apply as editor, appoint or remove (chair), policies, enabled types, scope changes, sub-topics |
+| `/api/v1/manuscripts/{id}/co-editors` | Propose, invite, respond, recommend |
+| `/api/v1/taxonomy` | Browse and search topics at every level, with labels in the requested language. Topic suggestions for a title and abstract. |
+| `/api/v1/publication-types` | The type registry: requirements, section templates, review questions, enabled boards |
 | `/api/v1/reports` | Create report, list and handle cases (admin or chair) |
-| `/api/v1/publications` | Search the catalog, get record, get versions |
+| `/api/v1/publications` | Search the catalog (filters for topic at any level, publication type, language, date, status), get record, get versions, get linked commentaries and notices |
 | `/api/v1/admin/*` | Node settings, applications and votes, distrust, replication status, backups, users |
 | `/collab/{manuscriptId}` | WebSocket for Yjs collaboration |
 
@@ -181,7 +188,7 @@ interface FormalCheckService {
   check(version: ManuscriptVersionRef): Promise<FormalFinding[]>;            // V1: returns []
 }
 interface ReviewerRecommender {
-  recommend(m: ManuscriptRef, limit: number): Promise<ReviewerCandidate[]>; // V1: field + keyword overlap
+  recommend(m: ManuscriptRef, limit: number): Promise<ReviewerCandidate[]>; // V1: topic match + keyword overlap + languages
 }
 interface EditorRecommender {
   recommend(m: ManuscriptRef): Promise<EditorCandidate[]>;                  // V1: rules in 05 §5

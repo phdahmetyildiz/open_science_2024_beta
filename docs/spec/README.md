@@ -15,12 +15,14 @@
 | 02 | [Architecture and tech stack](02-architecture-and-tech-stack.md) | Node architecture, data placement, tech stack, deployment |
 | 03 | [Federation and governance](03-federation-and-governance.md) | Node identity, signed feeds, admission voting, key management |
 | 04 | [Publications, replication and DOI](04-publications-replication-doi.md) | Publication packages, replica placement, audits, DOI registration, indexing |
-| 05 | [Editorial workflow](05-editorial-workflow.md) | Fields and boards, manuscript state machine, review, decisions, public record |
+| 05 | [Editorial workflow](05-editorial-workflow.md) | Boards, manuscript state machine, review, decisions, public record |
 | 06 | [Authoring and document model](06-authoring-and-document-model.md) | Rich-text and LaTeX editors, document model, rendering pipeline, import |
 | 07 | [Use cases](07-use-cases.md) | Use cases for all actors |
 | 08 | [Data model and APIs](08-data-model-and-apis.md) | Entities, event and manifest formats, API surface |
 | 09 | [Security, privacy and operations](09-security-privacy-operations.md) | Threat model, permissions, GDPR, anonymity, operations |
 | 10 | [Roadmap and open questions](10-roadmap-and-open-questions.md) | Phases, risks, decisions still needed |
+| 11 | [Languages and localisation](11-languages-and-localisation.md) | UI languages, content languages, scripts, rendering, search |
+| 12 | [Topics and publication types](12-topics-and-publication-types.md) | Subject taxonomy, boards, multi-topic papers, co-editors, publication types |
 
 Requirement keywords **MUST**, **SHOULD** and **MAY** are used as in RFC 2119. Release tags: **[V1]** first production release, **[V2]**, **[V3]** later releases.
 
@@ -33,7 +35,7 @@ Requirement keywords **MUST**, **SHOULD** and **MAY** are used as in RFC 2119. R
 | D-03 | Accepted papers are published **open access immediately**, with a DOI and their **complete review history** (all versions, reviews, responses, decision letters). Rejected papers stay private unless the author opts in to publishing them. |
 | D-04 | Reviewers are **anonymous during review**. Their names become public when the record is published. |
 | D-05 | Researcher identity is the **ORCID iD**. No institutional verification in V1. Users can report a person they believe is misrepresenting themselves. |
-| D-06 | Editors come from **network-wide editorial boards per subject field**. An editor is never from the author's institution. |
+| D-06 | Editors come from **network-wide editorial boards per subject area** (12 §3). An editor is never from the author's institution. |
 | D-07 | Each publication is stored on **at least R nodes** (default R = 5), placed automatically. Any node may mirror more. When a copy is added anywhere, every node's replica list is updated. |
 | D-08 | A non-profit **Open Science Foundation** (working name) is the legal entity that holds the DOI prefix. Every node operator is a member of the Foundation. |
 | D-09 | A node joins after **min(N, Q) approvals** from existing nodes, where N is the number of active member nodes and Q is the quorum cap (default 10). Only approvals count; rejection votes are informational. There is no network-level expulsion. |
@@ -44,6 +46,10 @@ Requirement keywords **MUST**, **SHOULD** and **MAY** are used as in RFC 2119. R
 | D-14 | Tech stack: **TypeScript throughout** (NestJS backend, React frontend, Tiptap/CodeMirror/Yjs editors, PostgreSQL), delivered as a Docker Compose stack of three containers. The PDF engine (Typst or HTML-to-PDF) is chosen after Phase-0 spike S1 (see 02 §4.3). |
 | D-15 | The network has a **generic URL** (the *front door*) on a Foundation-owned domain, served by several healthy nodes. Readers are served by whichever node answers. Signed-in users are redirected to their own account node. DOIs resolve to the front door (see 02 §6). |
 | D-16 | Private data survives node failure in two stages. **V1:** encrypted, restore-only copies on 2 partner nodes, which can't read them, and workflow deadlines pause while a handling node is down. **V2:** partner nodes can take over a failed node automatically (see 03 §11). |
+| D-17 | **Multilingual.** The UI ships in **English, German and French** in V1 and is ready for right-to-left languages. Papers are **English only in V1**, but every layer handles every script from the start, and other content languages follow from V2. Every paper has an English title, abstract and keywords, whatever its language (see 11). |
+| D-18 | The subject taxonomy is **OpenAlex Topics** (domain › field › subfield › topic), as a pinned copy shipped with the software. Boards can add sub-topics below topics (see 12 §1). |
+| D-19 | A paper has **one primary topic**, which decides the responsible board, plus up to 4 additional topics. For interdisciplinary papers the handling editor can add up to 2 **co-editors** from other boards (see 12 §2–4). |
+| D-20 | **Publication types** in V1: research article, review article, commentary, case report, data paper, software paper, all peer reviewed. Plus editorial notices that are not peer reviewed and are labelled as such: editorial, correction, expression of concern, retraction. The type registry can be extended (see 12 §6). |
 
 ## Assumptions to confirm
 
@@ -55,14 +61,16 @@ These were made by the spec authors to fill gaps. Each one is referenced where i
 | A-02 | Published content is licensed **CC BY 4.0** by default; CC0 is optional. |
 | A-03 | The software is licensed **AGPL-3.0**, so commercial forks must stay open. |
 | A-04 | The Foundation obtains one **ISSN** for the network journal. |
-| A-05 | The subject taxonomy is the **OECD Fields of Research and Development (FORD)**, two levels, extendable by boards. |
+| A-05 | *Superseded by D-18.* |
 | A-06 | A decision needs at least **2 completed reviews** (configurable per board). |
-| A-07 | Title, abstract and keywords are required in English. Full text may be in any language. The UI ships in English and German. |
+| A-07 | *Superseded by D-17.* |
 | A-08 | Publishing and reading are free (no article processing charges). |
 | A-09 | Unpublished manuscripts live only on their handling node. Outside it, they exist only as encrypted copies that the holder can't read (the node's own backups and its partner copies, D-16). They are never replicated across the network in readable form. |
 | A-10 | Reviewers may leave confidential comments for the editor, limited to ethics and conflict issues. These are never published. |
-| A-11 | One house citation style per field family (numeric or author–year), chosen by the board. |
-| A-12 | Authors can appeal a rejection once, to the board chair of the field. |
+| A-11 | One house citation style per board (numeric or author–year), chosen by the board. |
+| A-12 | Authors can appeal a rejection once, to a chair of the responsible board. |
+| A-13 | Reviewer topics are prefilled from the researcher's OpenAlex author record, looked up by ORCID iD (12 §5). |
+| A-14 | Taxonomy labels in German and French ship with V1, translated and reviewed by the boards (12 §1.2). |
 
 ## Glossary
 
@@ -84,9 +92,16 @@ These were made by the spec authors to fill gaps. Each one is referenced where i
 | Replica | A complete copy of a publication package on a node. |
 | R | Target replication factor (default 5). |
 | Q | Admission quorum cap (default 10). |
-| Field | A subject area from the taxonomy. Each field has an editorial board. |
+| Subject taxonomy | OpenAlex Topics, with four levels: domain, field, subfield, topic (12 §1). |
+| Topic | A level-4 entry of the taxonomy. Papers, editors and reviewers are classified by topics. |
+| Primary topic | The one topic of a paper that decides its responsible board. |
+| Board | An editorial board. It covers a set of subfields; each subfield belongs to exactly one board. |
+| Responsible board | The board covering the subfield of a paper's primary topic. |
 | Handling editor | The editor responsible for one manuscript. |
-| Reviewer pool | Researchers who opted in to review, with their fields and keywords. |
+| Co-editor | An editor from another board who helps handle an interdisciplinary paper (12 §4). |
+| Publication type | The kind of publication (research article, review, commentary …), defined in the type registry (12 §6). |
+| UI language / content language | The language of the interface (per user) and the language of a paper (per paper) (11). |
+| Reviewer pool | Researchers who opted in to review, with their topics, keywords and languages. |
 | Round | One review cycle on one manuscript version. |
 | Version of record | The final accepted and published version. |
 | SDM | Scholarly Document Model, the canonical internal document format (see 06). |
