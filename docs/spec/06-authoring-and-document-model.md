@@ -22,15 +22,19 @@ The SDM is a typed JSON tree, compatible with the ProseMirror document format. I
 | Structure | `section` (levels 1–4, numbered), `appendix`, `acknowledgements` |
 | Blocks | `paragraph`, `blockquote`, `bullet_list`, `ordered_list`, `list_item`, `code_block` (language), `horizontal_rule` |
 | Math | `math_inline`, `math_display` (LaTeX source, optional label, numbered), `math_align` (multi-line, numbered lines) |
-| Theorem-like | `theorem`, `lemma`, `proposition`, `corollary`, `definition`, `example`, `remark`, `proof`. Numbered; extendable per field. |
+| Theorem-like | `theorem`, `lemma`, `proposition`, `corollary`, `definition`, `example`, `remark`, `proof`. Numbered; extendable per board. |
 | Figures | `figure` (one or more `image` nodes or subfigures, `caption`, `alt_text`, label) |
 | Tables | `table` (header rows, merged cells, alignment, `caption`, label, optional notes) |
 | Algorithms | `algorithm` (pseudocode with line numbers, caption, label) |
 | References | `citation` (one or more reference keys, optional locator), `cross_reference` (target label, auto-formatted "Figure 3", "Eq. (2)"), `footnote` |
-| Inline marks | `emphasis`, `strong`, `code`, `subscript`, `superscript`, `small_caps`, `link` |
+| Inline marks | `emphasis`, `strong`, `code`, `subscript`, `superscript`, `small_caps`, `link`, `language` (BCP 47 tag, and direction for text in another language or script, 11 §2) |
 | Special | `chemical_formula` (mhchem syntax), `quantity` (number with SI unit) |
 
 Not in the model: fonts, colours, font sizes, spacing, page geometry, manual line or page breaks, and arbitrary HTML. Those are decided by the house style.
+
+**Languages.** The document root carries the paper's language (`lang`). Any block can override it (for example a quotation in Arabic), and so can the `language` mark inline (for example a Chinese name). All text is Unicode, normalised to NFC (11 §4).
+
+**Publication types.** Each publication type (12 §6) comes with a **section template**: the suggested and required sections that are pre-created when a manuscript is started (for example *Dataset description* and *Data access* for data papers). Required sections are checked when the paper is submitted. Authors can rename and add sections, but can't remove required ones.
 
 ### 2.2 Bibliography
 
@@ -57,7 +61,8 @@ Not in the model: fonts, colours, font sizes, spacing, page geometry, manual lin
 | Area | Supported |
 |---|---|
 | Sectioning | `\section`, `\subsection`, `\subsubsection`, `\paragraph`, `\appendix` |
-| Text | `\emph`, `\textbf`, `\textit`, `\texttt`, `\textsc`, `\textsuperscript`, `\textsubscript`, `\footnote`, `\url`, `\href`, quotes, dashes, common accents and special characters |
+| Text | `\emph`, `\textbf`, `\textit`, `\texttt`, `\textsc`, `\textsuperscript`, `\textsubscript`, `\footnote`, `\url`, `\href`, quotes, dashes, common accents and special characters, direct Unicode input in any script |
+| Languages | `\foreignlanguage{lang}{…}`, the `otherlanguage` environment (mapped to SDM language marks, 11 §6) |
 | Lists | `itemize`, `enumerate`, `description` |
 | Math | `$…$`, `\(…\)`, `\[…\]`, `equation`, `equation*`, `align`, `align*`, `gather`, `multline`, `cases`, matrices. The amsmath and amssymb macros as supported by KaTeX/Temml. `\mathbb`, `\mathcal`, `\operatorname`, and similar. |
 | Math macros | `\newcommand` and `\DeclareMathOperator` **for math only**, expanded at parse time |
@@ -119,12 +124,13 @@ flowchart LR
 - **PDF**: SDM is converted to Typst markup with the house template, and LaTeX math to Typst math. Output: A4 PDF, embedded fonts, PDF/A where possible, tagged for accessibility where the engine supports it.
 - **JATS**: for archives and indexers (PubMed Central, Crossref, preservation services).
 - Renderers are **deterministic and versioned**. The renderer version goes into the manifest, so the published PDF can be reproduced from the package.
-- **Phase-0 spike** (see 10): render a set of difficult test documents (dense math, large tables, many figures, footnotes, right-to-left text, CJK text) through Typst and through HTML-to-PDF, and compare quality and performance before choosing.
+- **Phase-0 spike** (see 10): render a set of difficult test documents (dense math, large tables, many figures, footnotes, and the multilingual test corpus of 11 §10 with right-to-left, CJK and Indic text) through Typst and through HTML-to-PDF, and compare quality and performance before choosing.
 
 ## 8. House style
 
 - One layout for the whole journal: one template for the web and one for the PDF, with typography, numbering and running headers.
-- Per-field variations are limited to the citation style (numeric or author–year, A-11) and the list of theorem-like environments.
+- Per-board variations are limited to the citation style (numeric or author–year, A-11) and the list of theorem-like environments.
+- Generated labels ("Abstract", "Figure", "References" …) and citation formatting follow the **paper's language**, not the reader's UI language (11 §5.2). The publication type is shown in the header ("Research article", "Data paper" …). Editorial notices carry a visible "Not peer reviewed" label (12 §6.3).
 - The style is versioned and governed by the Foundation's editorial council (an organisational question).
 
 ## 9. Import [V2]

@@ -3,7 +3,8 @@
 **One journal for all**: a federated, non-profit publishing platform run by universities and public research institutes, as an alternative to commercial academic publishers.
 
 - Researchers write their papers directly in the portal, in a rich-text editor or a restricted LaTeX editor, so every paper has the same clean layout.
-- Editors from network-wide subject boards handle submissions, and reviewers from the network's pool review them. AI assistance follows in a later release.
+- Editors from network-wide subject boards handle submissions, and reviewers from the network's pool review them. Topics follow the OpenAlex taxonomy, and papers can belong to several topics.
+- The portal is multilingual: the interface starts in English, German and French, and papers in other languages and scripts follow after the first release. AI assistance follows in a later release.
 - Accepted papers get a DOI and are open access immediately, together with their **complete, public review history**.
 - Any university or public research institute can run a node. New nodes are admitted by existing nodes, and there is no master node.
 - Every publication is stored on several independent nodes and can be verified against its signed, content-addressed package.
@@ -29,6 +30,8 @@ The technical specification is in [`docs/spec/`](docs/spec/README.md):
 | 08 | [Data model and APIs](docs/spec/08-data-model-and-apis.md) |
 | 09 | [Security, privacy and operations](docs/spec/09-security-privacy-operations.md) |
 | 10 | [Roadmap and open questions](docs/spec/10-roadmap-and-open-questions.md) |
+| 11 | [Languages and localisation](docs/spec/11-languages-and-localisation.md) |
+| 12 | [Topics and publication types](docs/spec/12-topics-and-publication-types.md) |
 
 ## Repository layout
 

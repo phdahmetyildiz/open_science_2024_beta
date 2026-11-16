@@ -49,16 +49,25 @@ history/
   "doi": "10.XXXXX/osn.uni-koeln.2027.00042",
   "version": 1,
   "previous_version_package": null,
-  "title": "…",
-  "abstract": "…",
+  "publication_type": "research-article",
   "language": "en",
-  "fields": ["1.2"],
-  "keywords": ["…"],
+  "title": { "en": "…" },
+  "abstract": { "en": "…" },
+  "keywords": { "en": ["…"] },
+  "topics": {
+    "taxonomy": "openalex-topics@2026-06",
+    "primary": "T11636",
+    "additional": ["T10028", "T12262"],
+    "extensions": []
+  },
+  "responsible_board": "osn:board:…",
+  "related": [ { "relation": "is-commentary-on", "doi": "…" } ],
   "license": "CC-BY-4.0",
   "authors": [
-    { "name": "…", "orcid": "0000-0002-…", "affiliations": ["…"], "corresponding": true, "contributor_roles": ["Conceptualization", "Writing – original draft"] }
+    { "name": "Zhang Wei", "name_native": { "zh-Hans": "张伟" }, "orcid": "0000-0002-…", "affiliations": ["…"], "corresponding": true, "contributor_roles": ["Conceptualization", "Writing – original draft"] }
   ],
   "editor": { "name": "…", "orcid": "…" },
+  "co_editors": [ { "name": "…", "orcid": "…", "board": "osn:board:…" } ],
   "reviewers": [ { "name": "…", "orcid": "…", "rounds": [1, 2] } ],
   "dates": { "submitted": "…", "accepted": "…", "published": "…" },
   "funding": [], "data_availability": "…", "competing_interests": "…",
@@ -74,6 +83,7 @@ history/
 - `package_id` is the SHA-256 over the canonical manifest without `package_id` and `signatures`. The manifest contains every file's hash, so the package ID covers all content.
 - The handling node signs the package. The signature confirms that the editorial decision recorded in `history/` took place on that node.
 - Contributor roles follow the CRediT taxonomy.
+- `title`, `abstract` and `keywords` are maps from language tag to text. English is always present (11 §5.1). `related` links commentaries, replies, notices, datasets and software to their targets (12 §6).
 
 ## 4. Publication record
 
@@ -95,7 +105,7 @@ A node only makes statements about itself (`ReplicaAdded` means "I hold a copy")
 - Placement uses **weighted rendezvous hashing** (highest random weight). For each active member *n*: `score(n) = −weight(n) / ln(hash(package_id ‖ n.node_id) as a value in (0,1))`, where `weight(n)` is the node's declared capacity share. The *r* highest-scoring nodes are the **responsible nodes**.
 - Every node can compute the responsible set by itself, with no coordination. When membership changes, only about 1/N of all packages move.
 - The handling node always keeps a copy in addition to the responsible set (its package is the origin of the first replication).
-- **Voluntary mirrors**: an administrator can configure a node to mirror *all* packages, or packages in selected fields. Mirrors announce themselves with `ReplicaAdded` like everyone else.
+- **Voluntary mirrors**: an administrator can configure a node to mirror *all* packages, or packages in selected parts of the taxonomy (for example one domain or field). Mirrors announce themselves with `ReplicaAdded` like everyone else.
 
 ### 5.2 Replication flow
 
@@ -173,5 +183,5 @@ Nodes that declare more capacity receive proportionally more replicas (§5.1).
 ## 10. Corrections, retractions and legal removal
 
 - **Correction**: authors propose it, and the handling editor (or the board chair, if the editor isn't available) approves it. A new package with `version` + 1 and a correction note is published. Earlier versions remain available.
-- **Retraction / expression of concern**: decided by the board chair of the field, following COPE guidelines. The handling node appends `PublicationStatusChanged` with the notice text. Content stays available with a prominent banner. [V2] If the handling node no longer exists, the board chair's node can issue the status change.
+- **Retraction / expression of concern**: decided by a chair of the responsible board, following COPE guidelines. The notice is published as its own editorial notice with a DOI (12 §6.3), and the handling node appends `PublicationStatusChanged` referring to it. Content stays available with a prominent banner. [V2] If the handling node no longer exists, the board chair's node can issue the status change.
 - **Legal removal** (for example a court order in one jurisdiction): a node MAY stop serving a package locally and append `ReplicaRemoved` with reason `legal`. The network-wide record keeps the metadata and a notice. The Foundation coordinates cases that affect every node.
